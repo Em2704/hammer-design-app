@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>icon source</title>
+  <style>
+    html, body { margin: 0; background: #fff; }
+    .stage { display: flex; flex-wrap: wrap; gap: 24px; padding: 24px; }
+    .icon { background: #16202b; display: flex; align-items: center; justify-content: center; }
+    /* normal icons: slight rounding (OS may re-mask) */
+    #icon512 { width: 512px; height: 512px; border-radius: 96px; }
+    #icon192 { width: 192px; height: 192px; border-radius: 36px; }
+    /* maskable: full bleed, glyph kept inside the central safe zone */
+    #iconMaskable { width: 512px; height: 512px; border-radius: 0; }
+    #icon512 svg, #iconMaskable svg { width: 66%; height: 66%; }
+    #icon192 svg { width: 66%; height: 66%; }
+    #iconMaskable svg { width: 54%; height: 54%; }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div id="icon512" class="icon">__GLYPH__</div>
+    <div id="icon192" class="icon">__GLYPH__</div>
+    <div id="iconMaskable" class="icon">__GLYPH__</div>
+  </div>
+
+  <script>
+    // One SVG glyph, injected into each sized container so they stay identical.
+    const glyph = `
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <!-- handle -->
+        <rect x="45" y="40" width="10" height="46" rx="3" fill="#c89a4e"/>
+        <!-- head -->
+        <rect x="22" y="22" width="56" height="22" rx="5" fill="#a8772a"/>
+        <!-- struck face (darker end) -->
+        <rect x="22" y="22" width="12" height="22" rx="5" fill="#7d561d"/>
+        <!-- gauge tick baseline (spec-sheet motif) -->
+        <g fill="#56697a">
+          <rect x="30" y="90" width="3" height="6" rx="1"/>
+          <rect x="42" y="90" width="3" height="6" rx="1"/>
+          <rect x="54" y="90" width="3" height="6" rx="1"/>
+          <rect x="66" y="90" width="3" height="6" rx="1"/>
+        </g>
+      </svg>`;
+    document.querySelectorAll(".icon").forEach((el) => { el.innerHTML = glyph; });
+  </script>
+</body>
+</html>
