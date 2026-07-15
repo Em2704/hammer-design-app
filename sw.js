@@ -2,12 +2,14 @@
    Precaches the app shell so the app opens offline and qualifies as installable.
    Bump CACHE when any shell file changes. */
 
-const CACHE = "hammer-selector-v2";
+const CACHE = "hammer-selector-v4";
 
 const SHELL = [
   "./index.html",
   "./styles.css",
   "./app.js",
+  "./engine/recommend.js",
+  "./engine/profiles.v1.json",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
@@ -28,23 +30,29 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-// Cache-first for same-origin shell; network-first fallthrough for everything else
-// (e.g. Google Fonts — cosmetic, so failing offline is fine).
+// Network-first for same-origin GET: always try the network so the latest
+// shell shows whenever online (incl. local dev), and refresh the cache with
+// what we get. Fall back to cache only when the network is unavailable
+// (offline) — navigations then fall back to the cached index.html.
+// Cross-origin (e.g. Google Fonts) is left to the browser: cosmetic, fine to fail offline.
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   if (request.method !== "GET") return;
 
   const url = new URL(request.url);
-  if (url.origin === self.location.origin) {
-    event.respondWith(
-      caches.match(request).then((cached) =>
-        cached ||
-        fetch(request).then((resp) => {
-          const copy = resp.clone();
-          caches.open(CACHE).then((cache) => cache.put(request, copy));
-          return resp;
-        }).catch(() => caches.match("./index.html"))
+  if (url.origin !== self.location.origin) return;
+
+  event.respondWith(
+    fetch(request)
+      .then((resp) => {
+        const copy = resp.clone();
+        caches.open(CACHE).then((cache) => cache.put(request, copy));
+        return resp;
+      })
+      .catch(() =>
+        caches.match(request).then(
+          (cached) => cached || caches.match("./index.html")
+        )
       )
-    );
-  }
+  );
 });

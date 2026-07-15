@@ -14,7 +14,9 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <!-- PHASE 1 MOCKUP: stub data only, no real recommendation logic yet. -->
+  <!-- Rankings come from the Phase-3 engine on REAL Phase-6C study means
+       (engine/recommend.js + engine/profiles.v1.json). -->
+
 
   <header class="titleblock">
     <div class="tb-main">
@@ -96,9 +98,10 @@
   </main>
 
   <footer class="app-footer">
-    Prototype · stub data · not for clinical or safety decisions
+    Prototype · real study means (hammering; knob &amp; wood) · not for clinical or safety decisions
   </footer>
-  
+
+  <script src="./engine/recommend.js"></script>
   <script src="app.js"></script>
   <script>
     // Register the service worker so the app works offline and is installable.

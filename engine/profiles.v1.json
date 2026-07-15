@@ -1,0 +1,45 @@
+{
+  "_meta": {
+    "source": "Hammer_Design-main Phase 6C — DESCRIPTIVE STATISTICS BY HAMMER x CONDITION",
+    "source_file": "Results/Phase6c/All_Participants/Statistics/Phase6c_Comprehensive_Stats.txt",
+    "participants": "P10-P17 (n=8)",
+    "note": "REAL study values, not stubs. Only measured field surfaces (knob, wood) are here. Values are per hammer x surface group means.",
+    "units": {
+      "peak_force_n": "Newtons (F = m*a, real hammer mass)",
+      "transmission_ratio": "unitless (forearm RMS / hammer RMS); >1 amplification",
+      "attenuation_pct": "(1 - transmission_ratio) * 100",
+      "damping_quality": "peak/RMS oscillation measure",
+      "cumulative_load_n": "Newtons summed",
+      "cumulative_energy_j": "Joules (integral of |F*a| dt over the study session)",
+      "energy_per_strike_j": "Joules per strike (cumulative_energy / n_strikes)"
+    }
+  },
+  "hammers": {
+    "S":  { "oz": 15, "mass_kg": 0.42524 },
+    "16": { "oz": 16, "mass_kg": 0.45359 },
+    "20": { "oz": 20, "mass_kg": 0.56699 },
+    "22": { "oz": 22, "mass_kg": 0.62369 }
+  },
+  "profiles": {
+    "knob": {
+      "S":  { "n": 5, "peak_force_n": 4.496, "transmission_ratio": 0.986, "attenuation_pct": 1.4,  "damping_quality": 6.20, "cumulative_load_n": 61.9,  "cumulative_energy_j": 1133.700, "energy_per_strike_j": 33.338, "transmission_is_measured": true },
+      "16": { "n": 5, "peak_force_n": 4.551, "transmission_ratio": 1.026, "attenuation_pct": -2.6, "damping_quality": 4.20, "cumulative_load_n": 20.1,  "cumulative_energy_j": 583.545,  "energy_per_strike_j": 36.395, "transmission_is_measured": true },
+      "20": { "n": 5, "peak_force_n": 5.840, "transmission_ratio": 0.992, "attenuation_pct": 0.8,  "damping_quality": 4.42, "cumulative_load_n": 79.2,  "cumulative_energy_j": 1475.390, "energy_per_strike_j": 44.447, "transmission_is_measured": true },
+      "22": { "n": 6, "peak_force_n": 6.892, "transmission_ratio": 1.005, "attenuation_pct": -0.5, "damping_quality": 5.92, "cumulative_load_n": 107.5, "cumulative_energy_j": 1915.531, "energy_per_strike_j": 52.450, "transmission_is_measured": true }
+    },
+    "wood": {
+      "S":  { "n": 4, "peak_force_n": 5.323, "transmission_ratio": 0.999, "attenuation_pct": 0.1,  "damping_quality": 4.15, "cumulative_load_n": 46.2, "cumulative_energy_j": 2082.565, "energy_per_strike_j": 101.311, "transmission_is_measured": true },
+      "16": { "n": 6, "peak_force_n": 6.114, "transmission_ratio": 1.025, "attenuation_pct": -2.5, "damping_quality": 4.56, "cumulative_load_n": 34.6, "cumulative_energy_j": 1699.362, "energy_per_strike_j": 192.018, "transmission_is_measured": true },
+      "20": { "n": 6, "peak_force_n": 6.749, "transmission_ratio": 1.000, "attenuation_pct": 0.0,  "damping_quality": 4.69, "cumulative_load_n": 48.1, "cumulative_energy_j": 2183.975, "energy_per_strike_j": 136.924, "transmission_is_measured": true },
+      "22": { "n": 4, "peak_force_n": 6.215, "transmission_ratio": 1.003, "attenuation_pct": -0.3, "damping_quality": 3.02, "cumulative_load_n": 24.9, "cumulative_energy_j": 2185.968, "energy_per_strike_j": 85.362, "transmission_is_measured": true }
+    }
+  },
+  "material_map": {
+    "rubber":   { "surface": "knob", "direct": false },
+    "knob":     { "surface": "knob", "direct": true  },
+    "plastic":  { "surface": "knob", "direct": false },
+    "wood":     { "surface": "wood", "direct": true  },
+    "metal":    { "surface": "wood", "direct": false },
+    "concrete": { "surface": "wood", "direct": false }
+  }
+}

@@ -1,45 +1,9 @@
-/* PHASE 1 MOCKUP — stub data + stub ranking only.
-   Real logic comes in Phase 3 (engine) + Phase 4 (API). Numbers here are
-   placeholders shaped to look plausible, NOT study output.
-
-   Model: the study measured 4 hammer weights. The user enters any weight;
-   we interpolate (and extrapolate at the ends) between the studied weights.
-   NOTE: stub values rise monotonically with weight, so the lightest always
-   "wins" — real data may show a sweet-spot curve instead. */
-
-// Studied hammer weights (oz) and their model codes.
-const STUDY_HAMMERS = [
-  { oz: 15, code: "S" },
-  { oz: 16, code: "16" },
-  { oz: 20, code: "20" },
-  { oz: 22, code: "22" },
-];
-
-// Lower score = easier on the body. Scale 0-100. Keyed by surface, then weight.
-const STUB_METRICS = {
-  knob: {
-    15: { effort: 30, shock: 18, fatigue: 35, workload: 28 },
-    16: { effort: 40, shock: 25, fatigue: 42, workload: 38 },
-    20: { effort: 52, shock: 35, fatigue: 50, workload: 55 },
-    22: { effort: 64, shock: 42, fatigue: 60, workload: 68 },
-  },
-  wood: {
-    15: { effort: 35, shock: 30, fatigue: 40, workload: 30 },
-    16: { effort: 45, shock: 45, fatigue: 45, workload: 42 },
-    20: { effort: 58, shock: 60, fatigue: 55, workload: 60 },
-    22: { effort: 70, shock: 72, fatigue: 65, workload: 75 },
-  },
-};
-
-// User material -> studied surface. direct = we have data for it.
-const MATERIAL_MAP = {
-  rubber:   { surface: "knob", direct: false },
-  knob:     { surface: "knob", direct: true  },
-  plastic:  { surface: "knob", direct: false },
-  wood:     { surface: "wood", direct: true  },
-  metal:    { surface: "wood", direct: false },
-  concrete: { surface: "wood", direct: false },
-};
+/* Hammer Selector — front-end controller (Phase 4).
+   Rankings now come from the REAL recommendation engine (engine/recommend.js)
+   run over the Phase-6C study means (engine/profiles.v1.json) — no more stubs.
+   The same engine powers the FastAPI backend (backend/), so the numbers match
+   whether the app runs online, offline, or against the API. This file only
+   gathers the inputs, calls the engine, and draws the report. */
 
 const METRIC_LABELS = {
   effort:   "Muscle effort",
@@ -68,40 +32,23 @@ $("strikes").addEventListener("wheel", (e) => e.target.blur());
 
 $("recommendBtn").addEventListener("click", recommend);
 
+// ---------- engine data (loaded once, cached) ----------
+// The profiles JSON is precached by the service worker, so this resolves
+// offline too. Kick the load off immediately so the first click is instant.
+let profilesPromise = null;
+function loadProfiles() {
+  if (!profilesPromise) {
+    profilesPromise = fetch("./engine/profiles.v1.json").then((r) => {
+      if (!r.ok) throw new Error(`profiles ${r.status}`);
+      return r.json();
+    });
+  }
+  return profilesPromise;
+}
+loadProfiles().catch(() => { /* surfaced on first run instead */ });
+
 // ---------- helpers ----------
 function clamp(v) { return Math.max(0, Math.min(100, v)); }
-
-// Piecewise-linear interpolation across the studied weights for one metric,
-// with linear extrapolation (clamped) beyond the measured range.
-function interpMetric(table, weights, w, key) {
-  if (w <= weights[0]) {
-    const [a, b] = [weights[0], weights[1]];
-    const slope = (table[b][key] - table[a][key]) / (b - a);
-    return clamp(table[a][key] + slope * (w - a));
-  }
-  for (let i = 1; i < weights.length; i++) {
-    const a = weights[i - 1], b = weights[i];
-    if (w <= b) {
-      const k = (w - a) / (b - a);
-      return clamp(table[a][key] + (table[b][key] - table[a][key]) * k);
-    }
-  }
-  const a = weights[weights.length - 2], b = weights[weights.length - 1];
-  const slope = (table[b][key] - table[a][key]) / (b - a);
-  return clamp(table[b][key] + slope * (w - b));
-}
-
-// Build the 4 strain metrics for a given weight + surface + duration factor.
-function metricsFor(surface, w, durFactor) {
-  const table = STUB_METRICS[surface];
-  const weights = Object.keys(table).map(Number).sort((a, b) => a - b);
-  const m = {};
-  for (const key of Object.keys(METRIC_LABELS)) m[key] = interpMetric(table, weights, w, key);
-  m.fatigue = clamp(m.fatigue * durFactor);
-  m.workload = clamp(m.workload * durFactor);
-  m.overall = (m.effort + m.shock + m.fatigue + m.workload) / 4;
-  return m;
-}
 
 // strain heat ramp: cool teal -> green -> amber -> ember across 0..100.
 const HEAT_STOPS = [
@@ -129,9 +76,23 @@ function bandWord(v) {
   return "high";
 }
 
-function gaugesHtml(metrics) {
+// Render the four component gauges from an engine `components` object.
+// `shock` can be null when transmission wasn't measured for the surface —
+// show that honestly rather than a fake zero.
+function gaugesHtml(components) {
   return Object.keys(METRIC_LABELS).map((key) => {
-    const v = Math.round(metrics[key]);
+    const raw = components[key];
+    if (raw == null) {
+      return `
+      <div class="gauge gauge-na">
+        <div class="gauge-top">
+          <span class="g-name">${METRIC_LABELS[key]}</span>
+          <span class="g-val">not measured</span>
+        </div>
+        <div class="gauge-track"><div class="gauge-fill" style="width:0%"></div></div>
+      </div>`;
+    }
+    const v = Math.round(raw);
     return `
       <div class="gauge">
         <div class="gauge-top">
@@ -146,62 +107,76 @@ function gaugesHtml(metrics) {
 }
 
 // ---------- main ----------
-function recommend() {
+async function recommend() {
   const material = $("material").value;
   const w = Number(weightEl.value);
   const minutes = Number(durationEl.value);
   const strikes = Math.max(0, Math.floor(Number($("strikes").value) || 0));
-  const map = MATERIAL_MAP[material];
 
-  // Duration nudges fatigue + workload up (longer job = more cumulative strain).
-  const durFactor = 0.8 + (minutes / 120) * 0.5; // 0.8 .. 1.3
+  let data;
+  try {
+    data = await loadProfiles();
+  } catch (err) {
+    showError("Couldn't load the study data. Check your connection and try again.");
+    return;
+  }
 
-  // Approximate strike count sharpens the cumulative estimate: more strikes,
-  // more fatigue/workload. Blank (0) = neutral, duration alone drives it.
-  const strikeFactor = strikes > 0 ? 0.85 + Math.min(strikes / 600, 1) * 0.45 : 1; // 0.85 .. 1.3
-  const cumFactor = durFactor * strikeFactor;
+  let res;
+  try {
+    res = window.HammerEngine.recommend(
+      { material, minutes, strikes, weightOz: w },
+      data,
+    );
+  } catch (err) {
+    showError(`Could not compute a recommendation: ${err.message}`);
+    return;
+  }
 
-  const yours = metricsFor(map.surface, w, cumFactor);
+  render({ res, w, strikes });
+}
 
-  const reference = STUDY_HAMMERS
-    .map((h) => ({ ...h, metrics: metricsFor(map.surface, h.oz, cumFactor) }))
-    .sort((a, b) => a.metrics.overall - b.metrics.overall);
-
-  // Which studied weight is closest to what the user entered?
-  const closestOz = STUDY_HAMMERS
-    .reduce((best, h) => Math.abs(h.oz - w) < Math.abs(best - w) ? h.oz : best, STUDY_HAMMERS[0].oz);
-
-  render({ material, map, w, strikes, yours, reference, closestOz });
+function showError(msg) {
+  $("resultsIntro").classList.add("hidden");
+  const disc = $("disclaimer");
+  disc.textContent = msg;
+  disc.classList.remove("hidden");
+  $("resultsList").innerHTML = "";
 }
 
 // ---------- render ----------
-function render({ material, map, w, strikes, yours, reference, closestOz }) {
+function render({ res, w, strikes }) {
   $("resultsIntro").classList.add("hidden");
 
+  // Honesty disclaimers straight from the engine (approximation, low sample, …).
   const disc = $("disclaimer");
-  if (!map.direct) {
-    disc.textContent =
-      `No study data for “${material}”. These results are approximated from the ` +
-      `closest measured surface (“${map.surface}”) and may not be accurate for ${material}.`;
+  if (res.disclaimers && res.disclaimers.length) {
+    disc.textContent = res.disclaimers.join(" ");
     disc.classList.remove("hidden");
   } else {
     disc.classList.add("hidden");
   }
 
-  const ov = Math.round(yours.overall);
+  // "Your hammer" — interpolated to the exact weight entered.
+  const yh = res.yourHammer;
+  const ov = yh && yh.overall != null ? Math.round(yh.overall) : null;
   const yourCard = `
     <div class="your-hammer">
       <div class="yh-head">
         <span class="yh-label">Your hammer</span>
         <span class="yh-weight">${w}<span class="unit">oz</span></span>
         ${strikes > 0 ? `<span class="yh-strikes">≈${strikes} strikes</span>` : ``}
-        <span class="overall">strain&nbsp;<b>${ov}</b> · ${bandWord(ov)}</span>
+        ${ov != null ? `<span class="overall">strain&nbsp;<b>${ov}</b> · ${bandWord(ov)}</span>` : ``}
       </div>
-      ${gaugesHtml(yours)}
+      ${gaugesHtml(yh ? yh.components : {})}
     </div>`;
 
-  const refRows = reference.map((h, i) => {
-    const o = Math.round(h.metrics.overall);
+  // Which studied weight is closest to what the user entered?
+  const closestOz = res.ranking
+    .map((h) => h.oz)
+    .reduce((best, oz) => (Math.abs(oz - w) < Math.abs(best - w) ? oz : best), res.ranking[0].oz);
+
+  const refRows = res.ranking.map((h, i) => {
+    const o = Math.round(h.overall);
     const isClosest = h.oz === closestOz;
     return `
       <li class="ref-row${i === 0 ? " best" : ""}">
