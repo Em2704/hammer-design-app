@@ -147,7 +147,7 @@ body {
 }
 .hint { display: block; color: var(--slate); font-size: 0.74rem; margin-top: 6px; }
 
-select, input[type="text"] {
+select, input[type="text"], input[type="number"] {
   width: 100%;
   padding: 11px 12px;
   background: #fff;
@@ -291,6 +291,14 @@ input[type="range"] { flex: 1; accent-color: var(--ink); }
   line-height: 1;
 }
 .yh-weight .unit { font-size: 0.7rem; color: var(--slate); margin-left: 2px; }
+.yh-strikes {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.72rem;
+  color: var(--slate);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 2px 6px;
+}
 .overall {
   margin-left: auto;
   font-family: "IBM Plex Mono", monospace;

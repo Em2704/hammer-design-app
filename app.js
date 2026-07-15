@@ -62,6 +62,10 @@ durationEl.addEventListener("input", () => {
   durationOut.innerHTML = `${durationEl.value}<span class="unit">min</span>`;
 });
 
+// Scrolling the page while the strikes field is focused would silently change
+// its value (Chrome wheel-on-number-input behavior) — drop focus instead.
+$("strikes").addEventListener("wheel", (e) => e.target.blur());
+
 $("recommendBtn").addEventListener("click", recommend);
 
 // ---------- helpers ----------
@@ -146,26 +150,32 @@ function recommend() {
   const material = $("material").value;
   const w = Number(weightEl.value);
   const minutes = Number(durationEl.value);
+  const strikes = Math.max(0, Math.floor(Number($("strikes").value) || 0));
   const map = MATERIAL_MAP[material];
 
   // Duration nudges fatigue + workload up (longer job = more cumulative strain).
   const durFactor = 0.8 + (minutes / 120) * 0.5; // 0.8 .. 1.3
 
-  const yours = metricsFor(map.surface, w, durFactor);
+  // Approximate strike count sharpens the cumulative estimate: more strikes,
+  // more fatigue/workload. Blank (0) = neutral, duration alone drives it.
+  const strikeFactor = strikes > 0 ? 0.85 + Math.min(strikes / 600, 1) * 0.45 : 1; // 0.85 .. 1.3
+  const cumFactor = durFactor * strikeFactor;
+
+  const yours = metricsFor(map.surface, w, cumFactor);
 
   const reference = STUDY_HAMMERS
-    .map((h) => ({ ...h, metrics: metricsFor(map.surface, h.oz, durFactor) }))
+    .map((h) => ({ ...h, metrics: metricsFor(map.surface, h.oz, cumFactor) }))
     .sort((a, b) => a.metrics.overall - b.metrics.overall);
 
   // Which studied weight is closest to what the user entered?
   const closestOz = STUDY_HAMMERS
     .reduce((best, h) => Math.abs(h.oz - w) < Math.abs(best - w) ? h.oz : best, STUDY_HAMMERS[0].oz);
 
-  render({ material, map, w, yours, reference, closestOz });
+  render({ material, map, w, strikes, yours, reference, closestOz });
 }
 
 // ---------- render ----------
-function render({ material, map, w, yours, reference, closestOz }) {
+function render({ material, map, w, strikes, yours, reference, closestOz }) {
   $("resultsIntro").classList.add("hidden");
 
   const disc = $("disclaimer");
@@ -184,6 +194,7 @@ function render({ material, map, w, yours, reference, closestOz }) {
       <div class="yh-head">
         <span class="yh-label">Your hammer</span>
         <span class="yh-weight">${w}<span class="unit">oz</span></span>
+        ${strikes > 0 ? `<span class="yh-strikes">≈${strikes} strikes</span>` : ``}
         <span class="overall">strain&nbsp;<b>${ov}</b> · ${bandWord(ov)}</span>
       </div>
       ${gaugesHtml(yours)}

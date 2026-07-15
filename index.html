@@ -75,6 +75,12 @@
         </div>
       </label>
 
+      <label class="field" for="strikes">
+        <span class="field-label">Strikes made <span class="optional">approx.</span></span>
+        <input id="strikes" type="number" inputmode="numeric" min="0" max="9999" step="10" placeholder="e.g. 250" />
+        <small class="hint">A rough count is fine. Leave blank if unknown — time on the job is used instead.</small>
+      </label>
+
       <button id="recommendBtn" class="primary-btn" type="button">Run strain report</button>
     </section>
 
@@ -92,7 +98,7 @@
   <footer class="app-footer">
     Prototype · stub data · not for clinical or safety decisions
   </footer>
-
+  
   <script src="app.js"></script>
   <script>
     // Register the service worker so the app works offline and is installable.
