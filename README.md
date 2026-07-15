@@ -11,6 +11,10 @@ python -m http.server 8731
 ```
 Open <http://localhost:8731/index.html>.
 
+## Run it Hosted by Github 
+
+Open <https://em2704.github.io/hammer-design-app/>
+
 ## Files
 
 | File | Purpose |
