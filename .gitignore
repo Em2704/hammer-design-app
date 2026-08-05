@@ -1,3 +1,8 @@
 # OS / editor cruft
 .DS_Store
 Thumbs.db
+
+# Git Bash crash dumps. publish_profiles.py checks this whole repo for dirt,
+# so a stray stackdump here is enough to abort a publish mid-demo.
+sh.exe.stackdump
+*.stackdump
