@@ -143,7 +143,13 @@ function recommend(input, data) {
         overall: Math.round(scored.overall * 10) / 10,
       };
     })
-    .sort((a, b) => a.overall - b.overall);
+    // Tie-break on mass, then code. `overall` is already rounded to 1dp, so
+    // exact ties are common; without an explicit tie-break the order would fall
+    // back to iteration order, and JS and Python disagree there — JS lists
+    // integer-like keys ("16","20","22") before string keys ("S"), Python keeps
+    // insertion order. That made the two engines pick different `best` hammers
+    // for the same job. Lighter wins a tie, consistent with "least strain".
+    .sort((a, b) => (a.overall - b.overall) || (a.oz - b.oz) || (a.code < b.code ? -1 : 1));
 
   // Confidence + honesty flags for the whole recommendation.
   const anyLowSample = ranked.some((r) => r.lowSample);
