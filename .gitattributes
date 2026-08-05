@@ -1,0 +1,14 @@
+# The publish pipeline writes these two files with LF (newline="\n"):
+#   scripts/export_profiles.py   -> engine/profiles.v1.json
+#   scripts/publish_profiles.py  -> sw.js  (bump_sw_cache)
+#
+# This machine has core.autocrlf=true, so without these rules git checks them
+# out as CRLF, the scripts rewrite them as LF, and `git status --porcelain`
+# then reports a phantom "modified" with an EMPTY `git diff`. That phantom
+# aborts publish_profiles.py at its clean-tree guard rail — which means a
+# --dry-run the day before silently breaks the real publish the next day.
+#
+# Pinning them to LF keeps the checked-out form identical to what the scripts
+# write, so a no-op regeneration leaves the tree clean.
+engine/profiles.v1.json text eol=lf
+sw.js                   text eol=lf
