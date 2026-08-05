@@ -45,6 +45,17 @@ those four hammers as equivalent on wood is the honest reading of this dataset.
 
 ## What's new
 
+- **Deterministic ranking when hammers tie.** Scores are rounded to one decimal, so two
+  hammers can land on exactly the same overall strain. Previously the order then fell back
+  to iteration order — and JavaScript lists integer-like keys (`"16"`, `"20"`, `"22"`)
+  before string keys (`"S"`), while the Python backend keeps insertion order. That meant
+  the app and the API could recommend **different hammers for the same job**. Both now
+  tie-break on mass, then code: the lighter hammer wins a tie, consistent with ranking by
+  least strain.
+- **The dataset is generated from a database.** `engine/profiles.v1.json` is no longer
+  hand-maintained — it is exported from the project's MySQL database, so the numbers here
+  and the numbers the API serves come from one source. It now also carries a `_stats`
+  block with the ANOVA p-values behind each surface.
 - **The real engine is wired in.** `app.js` no longer computes stub numbers — it fetches
   `engine/profiles.v1.json` and calls `window.HammerEngine.recommend`, the same pure
   function that the project's FastAPI backend runs server-side. Online, offline, or via the
@@ -118,14 +129,17 @@ See [Installing as an app](#installing-as-an-app) below.
 | `styles.css` | "Spec-sheet" visual design |
 | `app.js` | Gathers inputs, calls the engine, draws the report (no logic of its own) |
 | `engine/recommend.js` | The real recommendation engine — pure, deterministic ranking function |
-| `engine/profiles.v1.json` | Study group means per hammer × surface + material mapping |
+| `engine/profiles.v1.json` | Study group means per hammer × surface, material mapping, and `_stats` significance data. **Generated** — see below |
 | `manifest.json` | PWA metadata (name, icons, colors) |
 | `sw.js` | Service worker — network-first, offline fallback, precaches shell **and engine** |
 | `icons/` | App icons (192, 512, maskable) |
 | `icon.html` | Source used to generate the icons (not shipped to users) |
 
-> `engine/` here is a **deploy copy**. The canonical engine, its unit tests, and the backend
-> that shares the same math live in the project's private internal repo.
+> `engine/` here is a **deploy copy**, and `profiles.v1.json` is build output. Editing
+> either by hand will be overwritten the next time the dataset is exported from the
+> database. The canonical engine, its unit tests, the backend that shares the same math,
+> and the publish pipeline that regenerates this file all live in the project's private
+> internal repo.
 
 ## Installing as an app
 
