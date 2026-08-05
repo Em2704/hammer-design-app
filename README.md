@@ -28,12 +28,20 @@ never validated.
 | **Approximated** | `rubber`, `plastic`, `metal`, `concrete` — mapped to the nearest measured surface by hardness, with a visible disclaimer |
 | **Task** | Hammering only (that is all the study covers) |
 
-Two results worth knowing, straight out of the data:
+Two results worth knowing, and they differ in how much you should trust them:
 
-- **Knob** behaves as you'd expect — strain rises with weight: `S < 16 < 20 < 22`.
-- **Wood does not.** The ranking is `S < 22 < 20 < 16` — the **16 oz is the worst**
-  choice on wood (highest energy per strike), and the 22 oz comes second-best. This is
-  a real, non-monotonic finding, not a bug.
+- **Knob — trustworthy.** Strain rises with weight: `S < 16 < 20 < 22`. The differences
+  are statistically significant (peak-force ANOVA **p = 0.0000**, energy **p = 0.0495**,
+  n = 21), so this ordering is real.
+- **Wood — do not read too much into the order.** The app shows `S < 22 < 20 < 16`, but
+  on wood the hammers are **not statistically distinguishable** (peak-force ANOVA
+  **p = 0.8821**, cumulative-energy **p = 0.9312**, n = 20). The spread is wide — the
+  16 oz group's peak-force standard deviation is 65% of its own mean — so the apparent
+  "16 oz is worst" gap sits inside measurement noise.
+
+The app says so on screen rather than hiding it: a wood report carries a
+non-significance warning and reports `confidence: "measured-not-significant"`. Treating
+those four hammers as equivalent on wood is the honest reading of this dataset.
 
 ## What's new
 
@@ -74,8 +82,10 @@ Open the app, then on the **Job spec** panel:
   strain (lower bars = less load).
 
 ### 2. Confirm it's the real engine
-- Choose **Wood**, 30 minutes → the order should be **S, 22, 20, 16** (non-monotonic).
-- Choose **Knob**, 30 minutes → the order should be **S, 16, 20, 22** (monotonic).
+- Choose **Wood**, 30 minutes → the order should be **S, 22, 20, 16**, together with the
+  non-significance warning (the ordering is real output, but the gaps are within noise —
+  see [Where the numbers come from](#where-the-numbers-come-from)).
+- Choose **Knob**, 30 minutes → the order should be **S, 16, 20, 22**, no warning.
 
 If wood comes back in plain weight order, you're looking at a stale cached build — see the
 service-worker step below.
