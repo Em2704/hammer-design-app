@@ -70,7 +70,7 @@
       </label>
 
       <label class="field" for="duration">
-        <span class="field-label">Time on the job</span>
+        <span class="field-label">Task Duration</span>
         <div class="duration-row">
           <input id="duration" type="range" min="5" max="120" step="5" value="30" />
           <output id="durationOut" class="readout">30<span class="unit">min</span></output>
@@ -80,7 +80,7 @@
       <label class="field" for="strikes">
         <span class="field-label">Strikes made <span class="optional">approx.</span></span>
         <input id="strikes" type="number" inputmode="numeric" min="0" max="9999" step="10" placeholder="e.g. 250" />
-        <small class="hint">A rough count is fine. Leave blank if unknown — time on the job is used instead.</small>
+        <small class="hint">A rough count is fine. Leave blank if unknown — task duration is used instead.</small>
       </label>
 
       <button id="recommendBtn" class="primary-btn" type="button">Run strain report</button>

@@ -87,7 +87,7 @@ No backend is required — the engine runs client-side.
 
 ### 1. Quick check (live or local)
 Open the app, then on the **Job spec** panel:
-- Pick a **Material struck**, drag **Hammer weight** and **Time on the job**, optionally type a
+- Pick a **Material struck**, drag **Hammer weight** and **Task Duration**, optionally type a
   **Strikes made** count, and click **Run strain report**.
 - The **Strain report** panel lists *your* hammer plus the four study weights ranked by overall
   strain (lower bars = less load).

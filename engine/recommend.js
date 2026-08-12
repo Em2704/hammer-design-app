@@ -161,7 +161,7 @@ function recommend(input, data) {
   const disclaimers = [];
   if (!map.direct) {
     disclaimers.push(
-      `No study data for "${material}". Ranked from the closest measured surface ` +
+      `Ranked from the closest measured surface ` +
       `("${surface}") by hardness — may not be accurate for ${material}.`
     );
   }
