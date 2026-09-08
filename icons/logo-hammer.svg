@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Hammering Assessment Tools">
+  <!-- Standalone form of the glyph in icon.html, which the PWA icons were generated from.
+       Keep the two in sync if the mark ever changes. -->
+  <rect width="100" height="100" rx="18" fill="#16202b"/>
+  <g transform="translate(50 50) scale(0.66) translate(-50 -50)">
+    <!-- handle -->
+    <rect x="45" y="40" width="10" height="46" rx="3" fill="#c89a4e"/>
+    <!-- head -->
+    <rect x="22" y="22" width="56" height="22" rx="5" fill="#a8772a"/>
+    <!-- struck face (darker end) -->
+    <rect x="22" y="22" width="12" height="22" rx="5" fill="#7d561d"/>
+    <!-- gauge tick baseline (spec-sheet motif) -->
+    <g fill="#8899a8">
+      <rect x="30" y="90" width="3" height="6" rx="1"/>
+      <rect x="42" y="90" width="3" height="6" rx="1"/>
+      <rect x="54" y="90" width="3" height="6" rx="1"/>
+      <rect x="66" y="90" width="3" height="6" rx="1"/>
+    </g>
+  </g>
+</svg>

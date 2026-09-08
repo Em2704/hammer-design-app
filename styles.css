@@ -1,5 +1,5 @@
 /* =========================================================
-   Hammer Selector — "Spec Sheet" visual direction
+   Hammering Assessment Tools — "Spec Sheet" visual direction
    Cool engineering graph-paper, steel ink, brass accent,
    strain rendered as a cool→ember heat ramp on tick gauges.
    ========================================================= */
@@ -18,6 +18,10 @@
   --heat-cool: #3c7c8d;
   --heat-mid:  #c2912f;
   --heat-hot:  #b1432f;
+
+  /* exposure trace: hammering vs rest (validated pair on --panel) */
+  --exp-active: #a8772a;
+  --exp-rest:   #1a7fa8;
 
   --r: 6px;            /* tight, technical radius */
 }
@@ -447,7 +451,9 @@ input[type="range"] { flex: 1; accent-color: var(--ink); }
   margin-bottom: 14px;
 }
 .disclaimer::before { content: "▲"; color: var(--heat-mid); }
-.hidden { display: none; }
+/* Utility class — must beat any component display, including rules appended
+   later in this file (.exp-stats is display:grid), so it carries !important. */
+.hidden { display: none !important; }
 
 .app-footer {
   text-align: center;
@@ -460,4 +466,400 @@ input[type="range"] { flex: 1; accent-color: var(--ink); }
 @media (prefers-reduced-motion: reduce) {
   .gauge-fill { animation: none; }
   .hammer-row { transition: none; }
+  .tool-card { transition: none; }
+  .tool-card:hover { transform: none; }
+}
+
+/* =========================================================
+   Suite index (index.html)
+   ========================================================= */
+.tb-brand { display: flex; align-items: center; gap: 16px; min-width: 0; }
+/* Flex items default to min-width:auto, which would let the long title push the
+   page wider than the viewport instead of wrapping. */
+.tb-brand > div { min-width: 0; }
+.tb-brand h1 { overflow-wrap: break-word; }
+.brandmark {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.backlink {
+  display: inline-block;
+  font-family: "Saira Condensed", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--slate);
+  text-decoration: none;
+  margin-bottom: 6px;
+}
+.backlink:hover { color: var(--brass); }
+.backlink:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+
+.tool-grid {
+  max-width: 1040px;
+  margin: 26px auto;
+  padding: 0 18px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+@media (max-width: 780px) {
+  .tool-grid { grid-template-columns: 1fr; }
+}
+
+.tool-card {
+  display: flex;
+  flex-direction: column;
+  color: inherit;
+  text-decoration: none;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+}
+.tool-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--brass);
+  box-shadow: inset 4px 0 0 var(--brass);
+}
+.tool-card:focus-visible { outline: 2px solid var(--brass); outline-offset: 3px; }
+
+.tool-name {
+  font-family: "Saira Condensed", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 700;
+  font-size: 1.45rem;
+  line-height: 1.05;
+  margin: 0 0 8px;
+}
+.tool-desc { margin: 0 0 14px; color: var(--slate); font-size: 0.92rem; }
+.tool-points {
+  margin: 0 0 18px;
+  padding: 0;
+  list-style: none;
+  font-size: 0.82rem;
+  color: var(--slate);
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+.tool-points li { position: relative; padding-left: 16px; margin-bottom: 5px; }
+.tool-points li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 6px;
+  height: 2px;
+  background: var(--brass);
+}
+.tool-go {
+  margin-top: auto;
+  align-self: flex-start;
+  font-family: "Saira Condensed", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink);
+  border-bottom: 2px solid var(--brass);
+  padding-bottom: 2px;
+}
+.tool-go::after { content: " \2192"; }
+
+.home-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.ciswp-mark { height: 46px; width: auto; opacity: 0.9; }
+
+/* =========================================================
+   Exposure tracker (exposure.html)
+   ========================================================= */
+.ghost-btn {
+  width: 100%;
+  margin-top: 8px;
+  padding: 11px;
+  background: transparent;
+  color: var(--ink);
+  font-family: "Saira Condensed", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  border: 1.5px solid var(--line);
+  border-radius: 5px;
+  cursor: pointer;
+}
+.ghost-btn:hover:not(:disabled) { border-color: var(--ink); }
+.ghost-btn:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+.ghost-btn:disabled, .primary-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.exp-console {
+  border: 1.5px solid var(--ink);
+  border-radius: 5px;
+  background: #fff;
+  padding: 14px 16px 16px;
+  margin: 22px 0 18px;
+}
+.exp-console-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.exp-clock-label {
+  font-family: "Saira Condensed", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 0.68rem;
+  color: var(--slate);
+}
+.exp-state {
+  font-family: "Saira Condensed", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1.5px solid var(--line);
+  color: var(--slate);
+}
+.exp-state[data-state="active"] {
+  border-color: var(--exp-active);
+  color: #7d561d;
+  background: var(--brass-soft);
+}
+.exp-state[data-state="rest"] {
+  border-color: var(--exp-rest);
+  color: #14657f;
+  background: rgba(26, 127, 168, 0.10);
+}
+.exp-state[data-state="done"] {
+  border-color: var(--ink);
+  color: var(--panel);
+  background: var(--ink);
+}
+
+.exp-clock {
+  display: block;
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 600;
+  font-size: clamp(2rem, 7vw, 2.7rem);
+  line-height: 1.1;
+  letter-spacing: 1px;
+  margin: 2px 0 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.exp-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-top: 16px;
+}
+@media (max-width: 900px) {
+  .exp-stats { grid-template-columns: 1fr 1fr; }
+}
+.stat-tile {
+  border: 1.5px solid var(--line);
+  border-radius: 5px;
+  background: #fff;
+  padding: 9px 11px;
+}
+.stat-key {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: "Saira Condensed", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 0.68rem;
+  color: var(--slate);
+  margin-bottom: 3px;
+}
+.stat-val {
+  display: block;
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 600;
+  font-size: 1.2rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* shared swatch — legend and stat keys use the same mark */
+.swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  display: inline-block;
+}
+.swatch-active { background: var(--exp-active); }
+.swatch-rest { background: var(--exp-rest); }
+
+.chart-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.chart-title {
+  margin: 0;
+  font-family: "Saira Condensed", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 0.8rem;
+  color: var(--slate);
+}
+.legend {
+  display: flex;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.76rem;
+  color: var(--slate);
+}
+.legend li { display: flex; align-items: center; gap: 6px; }
+
+.chart-wrap { position: relative; }
+/* Scaled to a phone the axis and lane labels become unreadable, so below the
+   breakpoint the plot keeps a legible width and scrolls inside its own box
+   rather than widening the page. */
+@media (max-width: 780px) {
+  /* the grid item must be allowed to shrink, or the overflow escapes to the page */
+  .layout > .panel { min-width: 0; }
+  .chart-wrap { overflow-x: auto; }
+  .wave { min-width: 560px; }
+}
+.wave { width: 100%; height: auto; display: block; }
+.wave-axis {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px;
+  fill: var(--slate);
+}
+.wave-lane {
+  font-family: "Saira Condensed", sans-serif;
+  font-size: 13px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  fill: var(--slate);
+}
+
+.chart-tip {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  margin-top: -8px;
+  pointer-events: none;
+  background: var(--ink);
+  color: var(--panel);
+  border-radius: 4px;
+  padding: 6px 9px;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.7rem;
+  line-height: 1.35;
+  white-space: nowrap;
+  z-index: 2;
+}
+.chart-tip b {
+  display: block;
+  font-family: "Saira Condensed", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 0.72rem;
+}
+.chart-tip span { display: block; color: #b9c6d2; }
+
+/* ---- end-of-day summary ---- */
+.exp-summary {
+  position: relative;
+  margin-top: 20px;
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+}
+.summary-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.summary-title {
+  font-family: "Saira Condensed", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-weight: 700;
+  font-size: 1rem;
+}
+.summary-hammer {
+  margin-left: auto;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.85rem;
+  color: var(--slate);
+}
+.summary-hammer .unit { font-size: 0.65rem; margin-left: 1px; }
+.exp-summary .stamp { position: static; transform: none; }
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin: 0 0 14px;
+}
+.summary-grid div {
+  border: 1.5px solid var(--line);
+  border-radius: 5px;
+  background: #fff;
+  padding: 9px 11px;
+}
+.summary-grid dt {
+  font-family: "Saira Condensed", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 0.66rem;
+  color: var(--slate);
+}
+.summary-grid dd {
+  margin: 2px 0 0;
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 600;
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 560px) {
+  .summary-grid { grid-template-columns: 1fr 1fr; }
+}
+
+.summary-note { font-size: 0.8rem; color: var(--slate); margin: 0 0 14px; }
+
+.record-preview {
+  border: 1.5px solid var(--line);
+  border-radius: 5px;
+  background: #fff;
+  padding: 10px 12px;
+}
+.record-preview summary {
+  cursor: pointer;
+  font-family: "Saira Condensed", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 0.74rem;
+  color: var(--slate);
+}
+.record-preview pre {
+  max-height: 260px;
+  overflow: auto;
+  background: #eef1f3;
+  border-radius: 4px;
+  padding: 10px;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.7rem;
+  line-height: 1.5;
+  margin: 10px 0 6px;
 }

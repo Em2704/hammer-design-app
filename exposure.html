@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hammering Exposure Tracker — active vs rest over a shift</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#16202b" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <link rel="icon" href="icons/logo-hammer.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Saira+Condensed:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Visual/interaction pass only. Nothing here is persisted server-side yet:
+       "Finish day" renders the record it WOULD submit, and the write to
+       hammering_risk_exposure comes with the backend work. -->
+
+  <header class="titleblock">
+    <div class="tb-main">
+      <a class="backlink" href="index.html">&larr; All tools</a>
+      <h1>Hammering Exposure Tracker</h1>
+      <p class="tagline">Clock the shift. See how much of it was actually hammering.</p>
+    </div>
+    <dl class="tb-meta">
+      <div><dt>Sheet</dt><dd>02 · Exposure</dd></div>
+      <div><dt>Subject</dt><dd>Hammering</dd></div>
+      <div><dt>Rev</dt><dd>Prototype</dd></div>
+    </dl>
+  </header>
+
+  <main class="layout">
+    <!-- ---------- SHIFT SETUP + CONTROLS ---------- -->
+    <section class="panel" aria-label="Shift setup">
+      <span class="panel-tag">Shift setup</span>
+
+      <label class="field" for="expWeight">
+        <span class="field-label">Hammer weight</span>
+        <div class="duration-row">
+          <input id="expWeight" type="range" min="10" max="32" step="1" value="16" />
+          <output id="expWeightOut" class="readout">16<span class="unit">oz</span></output>
+        </div>
+      </label>
+
+      <label class="field" for="expBrand">
+        <span class="field-label">Hammer brand <span class="optional">optional</span></span>
+        <input id="expBrand" type="text" placeholder="e.g. Estwing" />
+      </label>
+
+      <div class="exp-console">
+        <div class="exp-console-top">
+          <span id="expState" class="exp-state" data-state="idle">Not started</span>
+          <span class="exp-clock-label">Shift elapsed</span>
+        </div>
+        <output id="expClock" class="exp-clock" aria-live="off">00:00:00</output>
+
+        <button id="shiftBtn" class="primary-btn" type="button">Start day</button>
+        <button id="finishBtn" class="ghost-btn" type="button" disabled>Finish day</button>
+        <p id="expHint" class="hint">
+          Start the day when you pick the hammer up. Pause whenever you stop hammering.
+        </p>
+      </div>
+
+    </section>
+
+    <!-- ---------- EXPOSURE TRACE ---------- -->
+    <section class="panel report" aria-label="Exposure trace">
+      <span class="panel-tag">Exposure trace</span>
+
+      <div class="chart-head">
+        <p class="chart-title">Active and off time across the shift</p>
+        <ul class="legend">
+          <li><i class="swatch swatch-active" aria-hidden="true"></i>Hammering</li>
+          <li><i class="swatch swatch-rest" aria-hidden="true"></i>Rest</li>
+        </ul>
+      </div>
+
+      <div class="chart-wrap">
+        <svg id="wave" class="wave" viewBox="0 0 720 264" role="img"
+             aria-label="Square wave of hammering and rest across the shift"></svg>
+        <div id="waveTip" class="chart-tip hidden" role="status"></div>
+      </div>
+
+        <div id="expStats" class="exp-stats" aria-live="polite">
+          <div class="stat-tile">
+            <span class="stat-key"><i class="swatch swatch-active" aria-hidden="true"></i>Hammering</span>
+            <span id="statActive" class="stat-val">00:00</span>
+          </div>
+          <div class="stat-tile">
+            <span class="stat-key"><i class="swatch swatch-rest" aria-hidden="true"></i>Rest</span>
+            <span id="statRest" class="stat-val">00:00</span>
+          </div>
+          <div class="stat-tile">
+            <span class="stat-key">Bouts</span>
+            <span id="statBouts" class="stat-val">0</span>
+          </div>
+          <div class="stat-tile">
+            <span class="stat-key">Duty cycle</span>
+            <span id="statDuty" class="stat-val">—</span>
+          </div>
+        </div>
+
+      <p id="waveEmpty" class="results-intro">
+        Nothing recorded yet. Press <b>Start day</b> and the trace draws itself as you work.
+      </p>
+
+      <div id="expSummary" class="exp-summary hidden"></div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    Prototype · timing only · exposure is not scored yet and this is not a clinical or safety judgement
+  </footer>
+
+  <script src="exposure.js"></script>
+  <script>
+    // Register the service worker so the app works offline and is installable.
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("sw.js").catch((err) =>
+          console.warn("Service worker registration failed:", err)
+        );
+      });
+    }
+  </script>
+</body>
+</html>

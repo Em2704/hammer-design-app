@@ -1,7 +1,15 @@
-# Hammer Selector — front end (PWA)
+# Hammering Assessment Tools — front end (PWA)
 
-Installable web app that recommends the hammer weight putting the **least strain on the body**
-for a hammering job.
+Installable web app holding two hammering tools behind one index page:
+
+| Tool | Page | What it does |
+|---|---|---|
+| **Hammer Recommending Index** | `recommend.html` | Recommends the hammer weight putting the **least strain on the body** for a hammering job |
+| **Hammering Exposure Tracker** | `exposure.html` | Clocks a work shift as hammering vs. rest and draws it as a square wave |
+
+The Exposure Tracker is a **visual/interaction prototype only** — it times a shift and shows
+the record it would submit, but nothing is persisted server-side and no exposure score is
+calculated yet.
 
 > **Real study data.** Rankings come from the actual recommendation engine
 > (`engine/recommend.js`) run over group means from a MATLAB biomechanics study
@@ -79,7 +87,8 @@ those four hammers as equivalent on wood is the honest reading of this dataset.
 cd frontend
 python -m http.server 8731
 ```
-Open <http://localhost:8731/index.html>.
+Open <http://localhost:8731/> — that is the tool index; the two tools are at
+`/recommend.html` and `/exposure.html`.
 
 No backend is required — the engine runs client-side.
 
@@ -125,14 +134,17 @@ See [Installing as an app](#installing-as-an-app) below.
 
 | File | Purpose |
 |---|---|
-| `index.html` | The page (job-spec form + strain report) |
-| `styles.css` | "Spec-sheet" visual design |
-| `app.js` | Gathers inputs, calls the engine, draws the report (no logic of its own) |
+| `index.html` | Tool index — logo, title, and a card per tool |
+| `recommend.html` | Hammer Recommending Index (job-spec form + strain report) |
+| `exposure.html` | Hammering Exposure Tracker (shift timer + square-wave trace) |
+| `styles.css` | "Spec-sheet" visual design, shared by all three pages |
+| `app.js` | Gathers inputs, calls the engine, draws the report (no logic of its own). Loaded by `recommend.html` **only** — it binds its form elements at parse time and would throw on a page without them |
+| `exposure.js` | Shift state machine and the square-wave trace. No network calls |
 | `engine/recommend.js` | The real recommendation engine — pure, deterministic ranking function |
 | `engine/profiles.v1.json` | Study group means per hammer × surface, material mapping, and `_stats` significance data. **Generated** — see below |
 | `manifest.json` | PWA metadata (name, icons, colors) |
 | `sw.js` | Service worker — network-first, offline fallback, precaches shell **and engine** |
-| `icons/` | App icons (192, 512, maskable) |
+| `icons/` | App icons (192, 512, maskable), the `logo-hammer.svg` mark, and the CISWP symbol |
 | `icon.html` | Source used to generate the icons (not shipped to users) |
 
 > `engine/` here is a **deploy copy**, and `profiles.v1.json` is build output. Editing
@@ -147,7 +159,7 @@ A browser offers **Install** when the manifest loads, a service worker is active
 on a **secure context** (HTTPS or `localhost`).
 
 - **From the live URL:** it's HTTPS, so install works directly on desktop
-  (Chrome/Edge: install icon in the address bar, or menu → *Install Hammer Selector*) **and on
+  (Chrome/Edge: install icon in the address bar, or menu → *Install Hammering Assessment Tools*) **and on
   Android / Windows tablets** (browser menu → *Install app* / *Add to home screen*).
 - **Local dev on this computer:** `localhost` counts as secure, so install works from
   `http://localhost:8731` too.

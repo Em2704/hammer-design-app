@@ -1,4 +1,4 @@
-/* Hammer Selector — front-end controller (Phase 4).
+/* Hammer Recommending Index — front-end controller (Phase 4).
    Rankings now come from the REAL recommendation engine (engine/recommend.js)
    run over the Phase-6C study means (engine/profiles.v1.json) — no more stubs.
    The same engine powers the FastAPI backend (backend/), so the numbers match

@@ -1,4 +1,4 @@
-/* Hammer Selector — recommendation engine (Phase 3 reference implementation)
+/* Hammer Recommending Index — recommendation engine (Phase 3 reference implementation)
  *
  * Pure, side-effect-free ranking of the four studied hammers for a given job,
  * built ONLY from trustworthy, VISIBLE metrics (never the legacy Injury_Risk_Index).

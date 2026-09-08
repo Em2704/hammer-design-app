@@ -1,8 +1,8 @@
 {
-  "name": "Hammer Selector",
-  "short_name": "Hammer",
-  "description": "Pick the hammer that puts the least strain on the body.",
-  "start_url": "./index.html",
+  "name": "Hammering Assessment Tools",
+  "short_name": "Hammer Tools",
+  "description": "Two tools for looking at what hammering costs the body.",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
