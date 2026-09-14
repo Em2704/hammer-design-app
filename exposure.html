@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Hammering Exposure Tracker — active vs rest over a shift</title>
   <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#16202b" />
+  <meta name="theme-color" content="#10323d" />
   <meta name="mobile-web-app-capable" content="yes" />
   <link rel="icon" href="icons/logo-hammer.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
@@ -25,11 +25,14 @@
       <h1>Hammering Exposure Tracker</h1>
       <p class="tagline">Clock the shift. See how much of it was actually hammering.</p>
     </div>
-    <dl class="tb-meta">
-      <div><dt>Sheet</dt><dd>02 · Exposure</dd></div>
-      <div><dt>Subject</dt><dd>Hammering</dd></div>
-      <div><dt>Rev</dt><dd>Prototype</dd></div>
-    </dl>
+    <div class="tb-side">
+      <dl class="tb-meta">
+        <div><dt>Sheet</dt><dd>02 · Exposure</dd></div>
+        <div><dt>Subject</dt><dd>Hammering</dd></div>
+        <div><dt>Rev</dt><dd>Prototype</dd></div>
+      </dl>
+      <img class="tb-logo" src="icons/ciswp-mark.png" alt="Canadian Institute for Safety, Wellness, and Performance" />
+    </div>
   </header>
 
   <main class="layout">
@@ -38,7 +41,7 @@
       <span class="panel-tag">Shift setup</span>
 
       <label class="field" for="expWeight">
-        <span class="field-label">Hammer weight</span>
+        <span class="field-label">Hammer weight<a id="ref-expWeight" class="fn-ref" href="#fn-expWeight" aria-label="Note: Hammer weight">*</a></span>
         <div class="duration-row">
           <input id="expWeight" type="range" min="10" max="32" step="1" value="16" />
           <output id="expWeightOut" class="readout">16<span class="unit">oz</span></output>
@@ -46,7 +49,7 @@
       </label>
 
       <label class="field" for="expBrand">
-        <span class="field-label">Hammer brand <span class="optional">optional</span></span>
+        <span class="field-label">Hammer brand <span class="optional">optional</span><a id="ref-expBrand" class="fn-ref" href="#fn-expBrand" aria-label="Note: Hammer brand">*</a></span>
         <input id="expBrand" type="text" placeholder="e.g. Estwing" />
       </label>
 
@@ -64,6 +67,26 @@
         </p>
       </div>
 
+      <aside class="footnotes" aria-labelledby="fnHead">
+        <p id="fnHead" class="fn-head">Notes on the shift setup</p>
+        <ol class="fn-list">
+          <li id="fn-expWeight">
+            <a class="fn-ref" href="#ref-expWeight" aria-label="Back to Hammer weight">*</a>
+            <b>Hammer weight</b> — head weight of the hammer used for this shift. It is written into the day's
+            record and locked once the clock starts. This tool times the shift; it does not score the weight —
+            use the Hammer Recommending Index for that.
+          </li>
+          <li id="fn-expBrand">
+            <a class="fn-ref" href="#ref-expBrand" aria-label="Back to Hammer brand">*</a>
+            <b>Hammer brand</b> — a label for your own reference, saved with the record. It has no effect on the timing.
+          </li>
+        </ol>
+        <p class="fn-disclaimer">
+          This document is intended for informational purposes only. Any conclusions drawn from the information
+          contained in this document are the sole responsibility of the user. Users must also comply with all
+          relevant standards, legislation, and regulations applicable in their jurisdiction.
+        </p>
+      </aside>
     </section>
 
     <!-- ---------- EXPOSURE TRACE ---------- -->
@@ -86,19 +109,27 @@
 
         <div id="expStats" class="exp-stats" aria-live="polite">
           <div class="stat-tile">
-            <span class="stat-key"><i class="swatch swatch-active" aria-hidden="true"></i>Hammering</span>
+            <span class="stat-key"><i class="swatch swatch-active" aria-hidden="true"></i>Hammering
+              <span class="info-wrap"><button type="button" class="info" aria-label="How Hammering is calculated" aria-describedby="tipActive">i</button><span id="tipActive" class="info-tip" role="tooltip">Total time the hammer was in use: the sum of every hammering segment, from each press of Start / Resume to the next Pause or Finish. Timing only — no exposure score is applied.</span></span>
+            </span>
             <span id="statActive" class="stat-val">00:00</span>
           </div>
           <div class="stat-tile">
-            <span class="stat-key"><i class="swatch swatch-rest" aria-hidden="true"></i>Rest</span>
+            <span class="stat-key"><i class="swatch swatch-rest" aria-hidden="true"></i>Rest
+              <span class="info-wrap"><button type="button" class="info" aria-label="How Rest is calculated" aria-describedby="tipRest">i</button><span id="tipRest" class="info-tip" role="tooltip">Total time the hammer was down: the sum of every rest segment, from each Pause to the next Resume or Finish.</span></span>
+            </span>
             <span id="statRest" class="stat-val">00:00</span>
           </div>
           <div class="stat-tile">
-            <span class="stat-key">Bouts</span>
+            <span class="stat-key">Bouts
+              <span class="info-wrap tip-right"><button type="button" class="info" aria-label="How Bouts is calculated" aria-describedby="tipBouts">i</button><span id="tipBouts" class="info-tip" role="tooltip">Number of separate hammering segments in the shift. Every Start or Resume opens a new bout; the longest one is reported in the shift summary.</span></span>
+            </span>
             <span id="statBouts" class="stat-val">0</span>
           </div>
           <div class="stat-tile">
-            <span class="stat-key">Duty cycle</span>
+            <span class="stat-key">Duty cycle
+              <span class="info-wrap tip-right"><button type="button" class="info" aria-label="How Duty cycle is calculated" aria-describedby="tipDuty">i</button><span id="tipDuty" class="info-tip" role="tooltip">Share of the shift spent hammering: hammering time ÷ (hammering + rest), as a percentage. 100% means no rest was recorded. It describes the work pattern only; no risk threshold is applied.</span></span>
+            </span>
             <span id="statDuty" class="stat-val">—</span>
           </div>
         </div>
@@ -112,7 +143,19 @@
   </main>
 
   <footer class="app-footer">
-    Prototype · timing only · exposure is not scored yet and this is not a clinical or safety judgement
+    <img class="ciswp-mark" src="icons/ciswp-mark.png" alt="CISWP" />
+    <p class="foot-status">Prototype · timing only · exposure is not scored yet and this is not a clinical or safety judgement</p>
+    <p class="foot-disclaimer">
+      This document is intended for informational purposes only. Any conclusions drawn from the information
+      contained in this document are the sole responsibility of the user. Users must also comply with all
+      relevant standards, legislation, and regulations applicable in their jurisdiction.
+    </p>
+    <p class="foot-copy">© Canadian Institute for Safety, Wellness, and Performance, 2026 · Emiliano Perez Pellicer</p>
+    <address class="foot-contact">
+      CISWP · 25 Reuter Drive, Cambridge, Ontario N3E 1A9 ·
+      <a href="mailto:ciswp@conestogac.on.ca">ciswp@conestogac.on.ca</a> ·
+      <a href="https://www.ciswp.ca" rel="noopener">www.ciswp.ca</a>
+    </address>
   </footer>
 
   <script src="exposure.js"></script>

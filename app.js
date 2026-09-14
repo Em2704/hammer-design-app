@@ -7,10 +7,45 @@
 
 const METRIC_LABELS = {
   effort:   "Muscle effort",
-  shock:    "Shock to arm",
-  fatigue:  "Fatigue",
-  workload: "Workload",
+  shock:    "Impact force",
+  fatigue:  "Muscular fatigue",
+  workload: "Overall workload",
 };
+
+// What the "i" beside each gauge says. Mirrors the math in engine/recommend.js
+// (MAPS / WEIGHTS / loadFactor) and the measurement notes in the CISWP report
+// (Force attenuation profile). Keep the three in step.
+const METRIC_INFO = {
+  effort:
+    "Peak force at the handle per strike, in newtons: F = m × a from an accelerometer on the " +
+    "hammer head and the hammer's real mass, averaged per hammer and surface across the study " +
+    "group. Mapped so 4.0 N reads 0 and 7.5 N reads 100. A relative scale for comparing hammers, " +
+    "not an absolute load.",
+  shock:
+    "How much of the strike reaches the forearm: transmission ratio = RMS forearm force ÷ RMS " +
+    "hammer-head force, from accelerometers on both. 1.0 means the force passes straight through; " +
+    "above 1.0 the handle amplifies it. Mapped so 0.90 reads 0 and 1.10 reads 100. Only shown where " +
+    "it was actually measured — otherwise it is dropped and the other three weights are rescaled.",
+  fatigue:
+    "Energy the body absorbs per strike (∫|F·a| dt over the session ÷ strikes, in joules), mapped so " +
+    "30 J reads 0 and 200 J reads 100, then scaled by √(load factor). Load factor = estimated strikes " +
+    "÷ 900 (30 min at 30 strikes/min), limited to 0.2–2.0. Grows with job length, but slowly.",
+  workload:
+    "The same per-strike energy (30 J → 0, 200 J → 100) scaled linearly by the load factor " +
+    "(estimated strikes ÷ 900, limited to 0.2–2.0). This is the total burden of the job: twice the " +
+    "strikes, twice the workload.",
+};
+const OVERALL_INFO =
+  "Weighted sum of the four components: 30% muscle effort + 15% impact force + 25% muscular fatigue " +
+  "+ 30% overall workload, on a 0–100 scale where lower is easier on the body. When impact force was " +
+  "not measured its 15% is shared out across the other three. For “Your hammer” each component is " +
+  "interpolated between the two nearest studied weights and the overall is their average.";
+
+// Circled "i" + its tooltip. `id` must be unique per page so aria-describedby resolves.
+// `right` anchors the tooltip to the button's right edge — for buttons near the panel edge.
+function infoHtml(id, label, text, right = false) {
+  return `<span class="info-wrap${right ? " tip-right" : ""}"><button type="button" class="info" aria-label="How ${label} is calculated" aria-describedby="${id}">i</button><span id="${id}" class="info-tip" role="tooltip">${text}</span></span>`;
+}
 
 // ---------- DOM ----------
 const $ = (id) => document.getElementById(id);
@@ -51,10 +86,11 @@ loadProfiles().catch(() => { /* surfaced on first run instead */ });
 function clamp(v) { return Math.max(0, Math.min(100, v)); }
 
 // strain heat ramp: cool teal -> green -> amber -> ember across 0..100.
+// CISWP teal -> green -> amber -> ember; keep in step with --heat-* in styles.css.
 const HEAT_STOPS = [
-  { at: 0,   rgb: [47, 125, 142] },
+  { at: 0,   rgb: [19, 145, 135] },
   { at: 33,  rgb: [63, 158, 111] },
-  { at: 66,  rgb: [194, 145, 47] },
+  { at: 66,  rgb: [224, 150, 42] },
   { at: 100, rgb: [177, 67, 47] },
 ];
 function lerp(a, b, t) { return Math.round(a + (b - a) * t); }
@@ -82,11 +118,12 @@ function bandWord(v) {
 function gaugesHtml(components) {
   return Object.keys(METRIC_LABELS).map((key) => {
     const raw = components[key];
+    const name = `${METRIC_LABELS[key]}${infoHtml(`tip-${key}`, METRIC_LABELS[key], METRIC_INFO[key])}`;
     if (raw == null) {
       return `
       <div class="gauge gauge-na">
         <div class="gauge-top">
-          <span class="g-name">${METRIC_LABELS[key]}</span>
+          <span class="g-name">${name}</span>
           <span class="g-val">not measured</span>
         </div>
         <div class="gauge-track"><div class="gauge-fill" style="width:0%"></div></div>
@@ -96,7 +133,7 @@ function gaugesHtml(components) {
     return `
       <div class="gauge">
         <div class="gauge-top">
-          <span class="g-name">${METRIC_LABELS[key]}</span>
+          <span class="g-name">${name}</span>
           <span class="g-val">${String(v).padStart(2, "0")} · ${bandWord(v)}</span>
         </div>
         <div class="gauge-track">
@@ -136,7 +173,6 @@ async function recommend() {
 }
 
 function showError(msg) {
-  $("resultsIntro").classList.add("hidden");
   const disc = $("disclaimer");
   disc.textContent = msg;
   disc.classList.remove("hidden");
@@ -145,8 +181,6 @@ function showError(msg) {
 
 // ---------- render ----------
 function render({ res, w, strikes }) {
-  $("resultsIntro").classList.add("hidden");
-
   // Honesty disclaimers straight from the engine (approximation, low sample, …).
   const disc = $("disclaimer");
   if (res.disclaimers && res.disclaimers.length) {
@@ -165,7 +199,7 @@ function render({ res, w, strikes }) {
         <span class="yh-label">Your hammer</span>
         <span class="yh-weight">${w}<span class="unit">oz</span></span>
         ${strikes > 0 ? `<span class="yh-strikes">≈${strikes} strikes</span>` : ``}
-        ${ov != null ? `<span class="overall">strain&nbsp;<b>${ov}</b> · ${bandWord(ov)}</span>` : ``}
+        ${ov != null ? `<span class="overall">strain&nbsp;<b>${ov}</b> · ${bandWord(ov)}${infoHtml("tip-overall", "overall strain", OVERALL_INFO, true)}</span>` : ``}
       </div>
       ${gaugesHtml(yh ? yh.components : {})}
     </div>`;
@@ -194,6 +228,6 @@ function render({ res, w, strikes }) {
 
   $("resultsList").innerHTML = `
     ${yourCard}
-    <li class="ref-heading">Reference hammers — study weights, ranked by overall strain</li>
+    <li class="ref-heading">Reference hammers — study weights, ranked by overall strain${infoHtml("tip-ranking", "the ranking", OVERALL_INFO, true)}</li>
     ${refRows}`;
 }

@@ -1,27 +1,35 @@
 /* =========================================================
    Hammering Assessment Tools — "Spec Sheet" visual direction
-   Cool engineering graph-paper, steel ink, brass accent,
-   strain rendered as a cool→ember heat ramp on tick gauges.
+   Engineering graph-paper in the CISWP palette: navy ink, teal
+   accent, amber highlight; strain rendered as a teal→amber→ember
+   heat ramp on tick gauges.
    ========================================================= */
 
 :root {
-  --paper:   #e7ebef;   /* cool graph-paper gray */
-  --panel:   #f8fafb;   /* near-white panel */
-  --ink:     #16202b;   /* steel ink */
-  --slate:   #56697a;   /* secondary text / labels */
-  --grid:    #d3dbe2;   /* graph lines */
-  --line:    #c2ccd5;   /* borders */
-  --brass:   #a8772a;   /* forged accent — used sparingly */
-  --brass-soft: rgba(168, 119, 42, 0.10);
+  /* CISWP brand: navy, teal and amber sampled from the institute mark */
+  --navy:    #10323d;
+  --teal:    #139187;
+  --amber:   #fcb03c;
 
-  /* strain heat ramp (cool = easy, ember = hard) */
-  --heat-cool: #3c7c8d;
-  --heat-mid:  #c2912f;
+  --paper:   #e6eeed;   /* teal-tinted graph-paper gray */
+  --panel:   #f7fbfa;   /* near-white panel */
+  --ink:     var(--navy);
+  --slate:   #4a6470;   /* secondary text / labels */
+  --grid:    #cfdedc;   /* graph lines */
+  --line:    #b9cdca;   /* borders */
+  --brass:   var(--teal);        /* primary accent — focus, links, "best" */
+  --brass-soft: rgba(19, 145, 135, 0.10);
+  --amber-soft: rgba(252, 176, 60, 0.16);
+  --amber-ink:  #8a5a0e;         /* amber-family TEXT (raw amber fails contrast on white) */
+
+  /* strain heat ramp (teal = easy, ember = hard) */
+  --heat-cool: #139187;
+  --heat-mid:  #e0962a;
   --heat-hot:  #b1432f;
 
-  /* exposure trace: hammering vs rest (validated pair on --panel) */
-  --exp-active: #a8772a;
-  --exp-rest:   #1a7fa8;
+  /* exposure trace: hammering vs rest */
+  --exp-active: #fcb03c;
+  --exp-rest:   #139187;
 
   --r: 6px;            /* tight, technical radius */
 }
@@ -66,6 +74,12 @@ body {
   line-height: 0.95;
 }
 .tagline { margin: 6px 0 0; color: var(--slate); font-size: 0.95rem; }
+/* guidance sentence that used to live inside the report panel */
+.tb-note { margin: 8px 0 0; color: var(--slate); font-size: 0.84rem; max-width: 60ch; }
+
+/* institute mark + sheet metadata share the right-hand side */
+.tb-side { display: flex; align-items: flex-end; gap: 22px; flex-shrink: 0; }
+.tb-logo { height: 84px; width: auto; display: block; }
 
 .tb-meta {
   margin: 0;
@@ -101,6 +115,8 @@ body {
 @media (max-width: 780px) {
   .layout { grid-template-columns: 1fr; }
   .titleblock { flex-direction: column; align-items: flex-start; }
+  .tb-side { width: 100%; justify-content: space-between; flex-direction: row-reverse; }
+  .tb-logo { height: 64px; }
   .tb-meta { text-align: left; }
   .tb-meta div { justify-content: flex-start; }
 }
@@ -150,6 +166,134 @@ body {
   vertical-align: middle;
 }
 .hint { display: block; color: var(--slate); font-size: 0.74rem; margin-top: 6px; }
+/* secondary line under a field label, e.g. "Amount of time of repetitive continuous hammering" */
+.field-label .sub {
+  display: block;
+  font-family: "IBM Plex Sans", sans-serif;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
+  font-size: 0.74rem;
+  color: var(--slate);
+  margin-top: 1px;
+}
+
+/* ---------------- footnotes ---------------- */
+/* Every field label carries a "*" that jumps to its note; the note carries a
+   "*" that jumps back. Pure anchors — no script. */
+.fn-ref {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.9em;
+  font-weight: 600;
+  color: var(--brass);
+  text-decoration: none;
+  margin-left: 3px;
+  vertical-align: super;
+  line-height: 0;
+}
+.fn-ref:hover { color: var(--amber-ink); }
+.fn-ref:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; border-radius: 2px; }
+.footnotes {
+  margin-top: 22px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  color: var(--slate);
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+.fn-head {
+  margin: 0 0 8px;
+  font-family: "Saira Condensed", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 0.78rem;
+  color: var(--slate);
+}
+.fn-list { list-style: none; margin: 0; padding: 0; }
+.fn-list li {
+  position: relative;
+  padding: 3px 6px 3px 18px;
+  margin: 0 -6px 2px;
+  border-radius: 3px;
+  scroll-margin-top: 16px;
+}
+.fn-list li:target { background: var(--amber-soft); }
+.fn-list .fn-ref { position: absolute; left: 4px; top: 6px; margin: 0; vertical-align: baseline; }
+.fn-list b { color: var(--ink); font-weight: 600; }
+.fn-disclaimer { margin: 12px 0 0; font-size: 0.7rem; line-height: 1.5; }
+
+/* ---------------- "i" info tooltips ---------------- */
+/* A circled i beside every computed metric. The tooltip is a sibling span so
+   it can hold real sentences; it shows on hover and on keyboard focus. */
+.info-wrap { position: relative; display: inline-flex; align-items: center; }
+.info {
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  margin-left: 6px;
+  border: 1.5px solid var(--brass);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--brass);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.66rem;
+  font-weight: 600;
+  line-height: 1;
+  cursor: help;
+  flex-shrink: 0;
+}
+.info:hover, .info:focus-visible { background: var(--brass); color: #fff; outline: none; }
+.info:focus-visible { box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--brass); }
+.info-tip {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 8px);
+  width: max-content;
+  max-width: min(300px, 80vw);
+  background: var(--ink);
+  color: var(--panel);
+  border-radius: 4px;
+  padding: 8px 10px;
+  font-family: "IBM Plex Sans", sans-serif;
+  font-size: 0.72rem;
+  font-weight: 400;
+  line-height: 1.45;
+  text-transform: none;
+  letter-spacing: 0;
+  text-align: left;
+  z-index: 5;
+  display: none;          /* not visibility: a hidden 300px box would still widen the page on phones */
+  pointer-events: none;
+}
+.info-tip::after {
+  content: "";
+  position: absolute;
+  left: 10px;
+  top: 100%;
+  border: 6px solid transparent;
+  border-top-color: var(--ink);
+}
+.info:hover + .info-tip, .info:focus-visible + .info-tip { display: block; }
+/* tiles at the right edge of the grid open their tooltip leftwards */
+.info-wrap.tip-right .info-tip { left: auto; right: 0; }
+.info-wrap.tip-right .info-tip::after { left: auto; right: 10px; }
+/* On a phone there is no room beside the button: show the tooltip as a sheet
+   pinned to the bottom of the screen instead. */
+@media (max-width: 560px) {
+  .info-tip, .info-wrap.tip-right .info-tip {
+    position: fixed;
+    left: 16px;
+    right: 16px;
+    top: auto;
+    bottom: 16px;
+    width: auto;
+    max-width: none;
+    font-size: 0.8rem;
+    padding: 12px 14px;
+    box-shadow: 0 6px 18px rgba(16, 50, 61, 0.35);
+  }
+  .info-tip::after { display: none; }
+}
 
 select, input[type="text"], input[type="number"] {
   width: 100%;
@@ -195,12 +339,24 @@ input[type="range"] { flex: 1; accent-color: var(--ink); }
   cursor: pointer;
   transition: background 0.15s, transform 0.05s;
 }
-.primary-btn:hover { background: #243341; }
+.primary-btn:hover { background: #1b4a58; }
 .primary-btn:active { transform: translateY(1px); }
 .primary-btn:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
 
 /* ---------------- results ---------------- */
 .results-intro { color: var(--slate); font-size: 0.92rem; }
+/* standing description of what the report contains (shown before and after a run) */
+.report-desc {
+  color: var(--slate);
+  font-size: 0.84rem;
+  line-height: 1.55;
+  margin: 0 0 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+.report-desc p { margin: 0 0 8px; }
+.report-desc p:last-child { margin-bottom: 0; }
+.report-desc b { color: var(--ink); font-weight: 600; }
 .results-list { list-style: none; margin: 0; padding: 0; }
 
 .hammer-row {
@@ -257,8 +413,8 @@ input[type="range"] { flex: 1; accent-color: var(--ink); }
   letter-spacing: 2px;
   font-size: 0.7rem;
   font-weight: 700;
-  color: var(--brass);
-  border: 2px solid var(--brass);
+  color: var(--amber-ink);
+  border: 2px solid var(--amber);
   border-radius: 4px;
   padding: 3px 8px;
   transform: rotate(-5deg);
@@ -343,8 +499,8 @@ input[type="range"] { flex: 1; accent-color: var(--ink); }
   right: 10px;
   transform: none;
   border: none;
-  background: var(--brass);
-  color: #fff;
+  background: var(--amber);
+  color: var(--navy);
   letter-spacing: 1.5px;
   font-size: 0.6rem;
   padding: 2px 8px;
@@ -455,13 +611,36 @@ input[type="range"] { flex: 1; accent-color: var(--ink); }
    later in this file (.exp-stats is display:grid), so it carries !important. */
 .hidden { display: none !important; }
 
+/* ---------------- footer (shared by all three pages) ---------------- */
 .app-footer {
+  max-width: 1040px;
+  margin: 8px auto 0;
+  padding: 26px 22px 30px;
+  border-top: 1.5px solid var(--line);
   text-align: center;
   color: var(--slate);
-  font-size: 0.72rem;
-  font-family: "IBM Plex Mono", monospace;
-  padding: 22px;
+  font-size: 0.74rem;
 }
+.app-footer p, .app-footer address { margin: 0 auto; max-width: 720px; }
+.foot-status {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.72rem;
+  margin-bottom: 12px !important;
+}
+.foot-disclaimer { line-height: 1.5; margin-bottom: 12px !important; }
+.foot-copy {
+  font-family: "Saira Condensed", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 4px !important;
+}
+.foot-contact { font-style: normal; font-size: 0.7rem; }
+.foot-contact a { color: var(--brass); text-decoration: none; }
+.foot-contact a:hover { text-decoration: underline; }
+.app-footer .ciswp-mark { display: block; margin: 0 auto 14px; }
 
 @media (prefers-reduced-motion: reduce) {
   .gauge-fill { animation: none; }
@@ -525,6 +704,18 @@ input[type="range"] { flex: 1; accent-color: var(--ink); }
 }
 .tool-card:focus-visible { outline: 2px solid var(--brass); outline-offset: 3px; }
 
+/* the study report this app is built from */
+.report-cite {
+  max-width: 1040px;
+  margin: 0 auto 26px;
+  padding: 0 18px;
+}
+.report-cite .panel { padding: 26px 22px 20px; }
+.cite-text { margin: 0 0 8px; font-size: 0.9rem; line-height: 1.55; }
+.cite-text a { color: var(--brass); word-break: break-all; }
+.cite-text a:hover { color: var(--amber-ink); }
+.cite-note { margin: 0; color: var(--slate); font-size: 0.78rem; }
+
 .tool-name {
   font-family: "Saira Condensed", sans-serif;
   text-transform: uppercase;
@@ -552,7 +743,7 @@ input[type="range"] { flex: 1; accent-color: var(--ink); }
   top: 8px;
   width: 6px;
   height: 2px;
-  background: var(--brass);
+  background: var(--amber);
 }
 .tool-go {
   margin-top: auto;
@@ -568,14 +759,7 @@ input[type="range"] { flex: 1; accent-color: var(--ink); }
 }
 .tool-go::after { content: " \2192"; }
 
-.home-footer {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-.ciswp-mark { height: 46px; width: auto; opacity: 0.9; }
+.ciswp-mark { height: 72px; width: auto; }
 
 /* =========================================================
    Exposure tracker (exposure.html)
@@ -632,13 +816,13 @@ input[type="range"] { flex: 1; accent-color: var(--ink); }
 }
 .exp-state[data-state="active"] {
   border-color: var(--exp-active);
-  color: #7d561d;
-  background: var(--brass-soft);
+  color: var(--amber-ink);
+  background: var(--amber-soft);
 }
 .exp-state[data-state="rest"] {
   border-color: var(--exp-rest);
-  color: #14657f;
-  background: rgba(26, 127, 168, 0.10);
+  color: #0f6f68;
+  background: var(--brass-soft);
 }
 .exp-state[data-state="done"] {
   border-color: var(--ink);
@@ -775,7 +959,7 @@ input[type="range"] { flex: 1; accent-color: var(--ink); }
   letter-spacing: 1px;
   font-size: 0.72rem;
 }
-.chart-tip span { display: block; color: #b9c6d2; }
+.chart-tip span { display: block; color: #b9cdca; }
 
 /* ---- end-of-day summary ---- */
 .exp-summary {

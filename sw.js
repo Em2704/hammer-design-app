@@ -2,7 +2,7 @@
    Precaches the app shell so the app opens offline and qualifies as installable.
    Bump CACHE when any shell file changes. */
 
-const CACHE = "hammer-selector-v6";
+const CACHE = "hammer-selector-v7";
 
 const SHELL = [
   "./index.html",
@@ -19,6 +19,7 @@ const SHELL = [
   "./icons/icon-maskable-512.png",
   "./icons/logo-hammer.svg",
   "./icons/CISWP_SMYBOL_CMYK.png",
+  "./icons/ciswp-mark.png",
 ];
 
 self.addEventListener("install", (event) => {

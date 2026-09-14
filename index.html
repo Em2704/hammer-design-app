@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Hammering Assessment Tools</title>
   <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#16202b" />
+  <meta name="theme-color" content="#10323d" />
   <meta name="mobile-web-app-capable" content="yes" />
   <link rel="icon" href="icons/logo-hammer.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
@@ -26,11 +26,14 @@
         <p class="tagline">Two tools for looking at what hammering costs the body.</p>
       </div>
     </div>
-    <dl class="tb-meta">
-      <div><dt>Sheet</dt><dd>00 · Index</dd></div>
-      <div><dt>Subject</dt><dd>Hammering</dd></div>
-      <div><dt>Rev</dt><dd>Prototype</dd></div>
-    </dl>
+    <div class="tb-side">
+      <dl class="tb-meta">
+        <div><dt>Sheet</dt><dd>00 · Index</dd></div>
+        <div><dt>Subject</dt><dd>Hammering</dd></div>
+        <div><dt>Rev</dt><dd>Prototype</dd></div>
+      </dl>
+      <img class="tb-logo" src="icons/ciswp-mark.png" alt="Canadian Institute for Safety, Wellness, and Performance" />
+    </div>
   </header>
 
   <main class="tool-grid">
@@ -43,7 +46,7 @@
       <ul class="tool-points">
         <li>Set the material, hammer weight and task length</li>
         <li>Ranks the study hammers by overall strain</li>
-        <li>Breaks the score into effort, shock, fatigue and workload</li>
+        <li>Breaks the score into muscle effort, impact force, muscular fatigue and overall workload</li>
       </ul>
       <span class="tool-go">Open tool</span>
     </a>
@@ -63,9 +66,35 @@
     </a>
   </main>
 
-  <footer class="app-footer home-footer">
-    <img class="ciswp-mark" src="icons/CISWP_SMYBOL_CMYK.png" alt="CISWP" />
-    <span>Prototype · built on real study means (hammering; knob &amp; wood) · not for clinical or safety decisions</span>
+  <section class="report-cite" aria-label="Source report">
+    <div class="panel">
+      <span class="panel-tag">Source</span>
+      <p class="cite-text">
+        Canadian Institute for Safety, Wellness, and Performance. (2026). <i>Hammer Design Report</i>.
+        CISWP. <a href="docs/HammerDesign_ReportReady_v5.pdf" rel="noopener">https://em2704.github.io/hammer-design-app/docs/HammerDesign_ReportReady_v5.pdf</a>
+      </p>
+      <p class="cite-note">
+        Both tools are built on the field-study findings in this report (scaffolders and carpenters striking
+        scaffold knobs and wood with 15, 16, 20 &amp; 22 oz hammers). The report is licensed
+        CC BY-NC-ND 4.0; credit CISWP as the source and do not modify or use it commercially.
+      </p>
+    </div>
+  </section>
+
+  <footer class="app-footer">
+    <img class="ciswp-mark" src="icons/ciswp-mark.png" alt="CISWP" />
+    <p class="foot-status">Prototype · built on CISWP field-study means (hammering; knob &amp; wood) · not for clinical or safety decisions</p>
+    <p class="foot-disclaimer">
+      This document is intended for informational purposes only. Any conclusions drawn from the information
+      contained in this document are the sole responsibility of the user. Users must also comply with all
+      relevant standards, legislation, and regulations applicable in their jurisdiction.
+    </p>
+    <p class="foot-copy">© Canadian Institute for Safety, Wellness, and Performance, 2026 · Emiliano Perez Pellicer</p>
+    <address class="foot-contact">
+      CISWP · 25 Reuter Drive, Cambridge, Ontario N3E 1A9 ·
+      <a href="mailto:ciswp@conestogac.on.ca">ciswp@conestogac.on.ca</a> ·
+      <a href="https://www.ciswp.ca" rel="noopener">www.ciswp.ca</a>
+    </address>
   </footer>
 
   <script>
