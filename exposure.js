@@ -219,7 +219,7 @@ function renderWave(now) {
     const gx = x(t0 + t);
     if (gx > CH.right + 0.5) break;
     svg.appendChild(el("line", {
-      x1: gx, y1: CH.top, x2: gx, y2: CH.axis, stroke: "#d3dbe2", "stroke-width": 1,
+      x1: gx, y1: CH.top, x2: gx, y2: CH.axis, stroke: "var(--grid)", "stroke-width": 1,
     }));
     svg.appendChild(el("text", {
       x: gx, y: CH.axis + 16, "text-anchor": "middle", class: "wave-axis",
@@ -227,7 +227,7 @@ function renderWave(now) {
   }
   svg.appendChild(el("line", {
     x1: CH.left, y1: CH.axis, x2: CH.right, y2: CH.axis,
-    stroke: "#c2ccd5", "stroke-width": 1,
+    stroke: "var(--line)", "stroke-width": 1,
   }));
   svg.appendChild(el("text", {
     x: CH.right, y: CH.axis + 36, "text-anchor": "end", class: "wave-axis",
@@ -240,7 +240,7 @@ function renderWave(now) {
     }, kind === "active" ? "Hammering" : "Rest"));
     svg.appendChild(el("line", {
       x1: CH.left, y1: laneY(kind), x2: CH.right, y2: laneY(kind),
-      stroke: "#e3e9ee", "stroke-width": 1,
+      stroke: "var(--grid)", "stroke-width": 1,
     }));
   });
 
@@ -264,7 +264,7 @@ function renderWave(now) {
     if (prev !== null) {
       svg.appendChild(el("line", {
         x1: x1, y1: laneY(prev), x2: x1, y2: y,
-        stroke: "#8b9aa8", "stroke-width": 2, "stroke-linecap": "round",
+        stroke: "var(--slate)", "stroke-width": 2, "stroke-linecap": "round",
       }));
     }
     svg.appendChild(el("line", {
@@ -279,7 +279,7 @@ function renderWave(now) {
   if (state.status === "active" || state.status === "rest") {
     svg.appendChild(el("circle", {
       cx: x(now), cy: laneY(state.status), r: 4.5,
-      fill: "#f8fafb", stroke: "#16202b", "stroke-width": 2,
+      fill: "var(--panel)", stroke: "var(--ink)", "stroke-width": 2,
     }));
   }
 

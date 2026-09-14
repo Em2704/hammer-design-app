@@ -25,7 +25,7 @@ on desktop and on Android / Windows tablets (see [Installing as an app](#install
 ## Where the numbers come from
 
 The app ranks the four studied hammers (**S ≈ 15 oz, 16, 20, 22 oz**) on four *visible*
-components — muscle effort, shock to arm, fatigue, workload — and never on a single
+components — muscle effort, impact force, muscular fatigue, overall workload — and never on a single
 black-box score. Only metrics the study measured reliably are used; the study's own
 composite "injury risk index" is deliberately **excluded** because its weights were
 never validated.
@@ -47,9 +47,11 @@ Two results worth knowing, and they differ in how much you should trust them:
   16 oz group's peak-force standard deviation is 65% of its own mean — so the apparent
   "16 oz is worst" gap sits inside measurement noise.
 
-The app says so on screen rather than hiding it: a wood report carries a
-non-significance warning and reports `confidence: "measured-not-significant"`. Treating
-those four hammers as equivalent on wood is the honest reading of this dataset.
+The app says so on screen rather than hiding it: the Strain report's standing description
+states that the wood ordering is descriptive, not a firm ranking. (There is no per-run
+non-significance banner and no `measured-not-significant` confidence value — the engine
+emits `measured`, `measured-low-sample` or `approximate` only.) Treating those four hammers
+as equivalent on wood is the honest reading of this dataset.
 
 ## What's new
 
@@ -137,14 +139,15 @@ See [Installing as an app](#installing-as-an-app) below.
 | `index.html` | Tool index — logo, title, and a card per tool |
 | `recommend.html` | Hammer Recommending Index (job-spec form + strain report) |
 | `exposure.html` | Hammering Exposure Tracker (shift timer + square-wave trace) |
-| `styles.css` | "Spec-sheet" visual design, shared by all three pages |
+| `styles.css` | "Spec-sheet" visual design in the CISWP palette (navy / teal / amber), shared by all three pages; also the `*` footnote and `i` tooltip components |
 | `app.js` | Gathers inputs, calls the engine, draws the report (no logic of its own). Loaded by `recommend.html` **only** — it binds its form elements at parse time and would throw on a page without them |
 | `exposure.js` | Shift state machine and the square-wave trace. No network calls |
 | `engine/recommend.js` | The real recommendation engine — pure, deterministic ranking function |
 | `engine/profiles.v1.json` | Study group means per hammer × surface, material mapping, and `_stats` significance data. **Generated** — see below |
 | `manifest.json` | PWA metadata (name, icons, colors) |
 | `sw.js` | Service worker — network-first, offline fallback, precaches shell **and engine** |
-| `icons/` | App icons (192, 512, maskable), the `logo-hammer.svg` mark, and the CISWP symbol |
+| `icons/` | App icons (192, 512, maskable), the `logo-hammer.svg` mark, and the CISWP symbol (`ciswp-mark.png` is the padding-trimmed copy the pages use) |
+| `docs/` | `HammerDesign_ReportReady_v5.pdf` — the CISWP Hammer Design Report the tools are built from, linked from the index page (CC BY-NC-ND 4.0) |
 | `icon.html` | Source used to generate the icons (not shipped to users) |
 
 > `engine/` here is a **deploy copy**, and `profiles.v1.json` is build output. Editing
