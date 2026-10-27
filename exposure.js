@@ -404,8 +404,8 @@ function drawMiniWave(svg, segments, span) {
 
 function waveAlt(now) {
   const t = totals(now);
-  return "Square wave of the shift: " + t.bouts + " hammering bout"
-    + (t.bouts === 1 ? "" : "s") + ", " + fmtShort(t.active)
+  return "Square wave of the shift: " + t.bouts + " active stretch"
+    + (t.bouts === 1 ? "" : "es") + ", " + fmtShort(t.active)
     + " hammering against " + fmtShort(t.rest) + " rest.";
 }
 
@@ -464,7 +464,7 @@ function renderSummary(now) {
     + '<dl class="summary-grid">'
     + '<div><dt>Hammering</dt><dd>' + fmtShort(t.active) + '</dd></div>'
     + '<div><dt>Rest</dt><dd>' + fmtShort(t.rest) + '</dd></div>'
-    + '<div><dt>Longest bout</dt><dd>' + fmtShort(t.longest) + '</dd></div>'
+    + '<div><dt>Longest active stretch</dt><dd>' + fmtShort(t.longest) + '</dd></div>'
     + '<div><dt>Duty cycle</dt><dd>'
     + (t.duty == null ? "—" : Math.round(t.duty * 100) + "%") + '</dd></div>'
     + '</dl>'
@@ -490,11 +490,11 @@ function renderSummary(now) {
 // it is about hammering.
 const PACING_PATTERNS = [
   { kind: "short", id: "expPaceShort", fn: "fn-pace-short",
-    title: "Short & frequent", blurb: "Many short hammering bouts, many short rests." },
+    title: "Short & frequent", blurb: "Many short active stretches, many short rests." },
   { kind: "long", id: "expPaceLong", fn: "fn-pace-long",
-    title: "Long & infrequent", blurb: "A few long hammering bouts, a few long rests." },
+    title: "Long & infrequent", blurb: "A few long active stretches, a few long rests." },
   { kind: "even", id: "expPaceEven", fn: "fn-pace-even",
-    title: "Evenly spaced", blurb: "Bouts and rests of roughly equal length, spread evenly." },
+    title: "Evenly spaced", blurb: "Active stretches and rests of roughly equal length, spread evenly." },
 ];
 
 function renderPacingIdeas(now) {
@@ -540,7 +540,7 @@ function buildPacingMarkup() {
     + '<p class="chart-title">Three ways the same totals could have been paced</p>'
     + '<p class="pacing-note">Not a record of what happened, and none of these is shown '
     + 'as better than another. Each re-splits today’s own hammering and rest totals '
-    + 'into a different bout/rest cadence. Pacing research is mixed and task-dependent, '
+    + 'into a different active/rest cadence. Pacing research is mixed and task-dependent, '
     + 'and no study was found on hammering specifically — see the notes below.</p>'
     + '<div class="pacing-grid">' + cards + '</div>'
     + '<aside class="footnotes pacing-footnotes" aria-labelledby="fnPaceHead">'
