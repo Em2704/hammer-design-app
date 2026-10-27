@@ -27,9 +27,10 @@
   --heat-mid:  #e0962a;
   --heat-hot:  #b1432f;
 
-  /* exposure trace: hammering vs rest */
+  /* exposure trace: hammering vs rest vs an unmonitored gap */
   --exp-active: #fcb03c;
   --exp-rest:   #139187;
+  --exp-unknown: var(--slate);
 
   --r: 6px;            /* tight, technical radius */
 }
@@ -824,10 +825,32 @@ input[type="range"] { flex: 1; accent-color: var(--ink); }
   color: #0f6f68;
   background: var(--brass-soft);
 }
+.exp-state[data-state="unknown"] {
+  border-color: var(--exp-unknown);
+  color: var(--exp-unknown);
+  background: var(--paper);
+}
 .exp-state[data-state="done"] {
   border-color: var(--ink);
   color: var(--panel);
   background: var(--ink);
+}
+
+.exp-gap-prompt {
+  border: 1.5px solid var(--exp-unknown);
+  border-radius: var(--r);
+  background: var(--paper);
+  padding: 12px 14px;
+  margin: 0 0 18px;
+}
+.exp-gap-text {
+  margin: 0 0 10px;
+  font-size: 0.92rem;
+}
+.exp-gap-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .exp-clock {
@@ -885,6 +908,7 @@ input[type="range"] { flex: 1; accent-color: var(--ink); }
 }
 .swatch-active { background: var(--exp-active); }
 .swatch-rest { background: var(--exp-rest); }
+.swatch-unknown { background: var(--exp-unknown); }
 
 .chart-head {
   display: flex;

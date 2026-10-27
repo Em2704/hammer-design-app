@@ -15,13 +15,20 @@ const STORE_KEY = "hammering.exposure.shift.v1";
 // Segments are closed in order; the last one stays open (end === null) until
 // the state changes or the day is finished.
 const blank = () => ({
-  status: "idle",          // idle | active | rest | done
+  status: "idle",          // idle | active | rest | unknown | done
   startedAt: null,
   finishedAt: null,
   hammerOz: 16,
   hammerBrand: "",
-  segments: [],            // { state: "active" | "rest", start: ms, end: ms|null }
+  segments: [],            // { state: "active" | "rest" | "unknown", start: ms, end: ms|null }
+  hiddenAt: null,          // ms timestamp the tab last went hidden; null when not pending
+  priorStatus: null,       // status to resume into once a pending "unknown" segment is resolved
 });
+
+// Tens-of-minutes range, per docs/exposure_stitching_research.md §4 (paper #4:
+// fixed thresholds score well, F1 > 0.96, for gaps over ~60 min; precision
+// below that doesn't matter much). Loosely tuned, not derived.
+const GAP_THRESHOLD_MS = 30 * 60 * 1000;
 
 let state = blank();
 let ticker = null;
@@ -49,6 +56,17 @@ function restore() {
     const saved = JSON.parse(raw);
     if (saved && typeof saved === "object" && Array.isArray(saved.segments)) {
       state = Object.assign(blank(), saved);
+      // The tab was hidden when it was last closed. If enough wall-clock
+      // time has passed since, treat this reload the same as an in-session
+      // tab-switch return: stitch the gap instead of silently stretching it
+      // into whichever segment was open.
+      if (state.hiddenAt != null && (state.status === "active" || state.status === "rest")) {
+        const now = Date.now();
+        if (now - state.hiddenAt >= GAP_THRESHOLD_MS) {
+          stitchGap(state.hiddenAt, now);
+        }
+        state.hiddenAt = null;
+      }
     }
   } catch (err) {
     /* unreadable — start fresh rather than half-restore */
@@ -61,6 +79,7 @@ const segEnd = (seg, now) => (seg.end == null ? now : seg.end);
 function totals(now) {
   let active = 0;
   let rest = 0;
+  let unknown = 0;
   let bouts = 0;
   let longest = 0;
   for (const seg of state.segments) {
@@ -69,12 +88,17 @@ function totals(now) {
       active += ms;
       bouts += 1;
       if (ms > longest) longest = ms;
+    } else if (seg.state === "unknown") {
+      unknown += ms;
     } else {
       rest += ms;
     }
   }
-  const span = active + rest;
-  return { active, rest, bouts, longest, span, duty: span > 0 ? active / span : null };
+  // Elapsed time includes unresolved gaps; duty cycle does not — it's a
+  // ratio of hammering to (hammering + rest) only.
+  const worked = active + rest;
+  const span = worked + unknown;
+  return { active, rest, unknown, bouts, longest, span, duty: worked > 0 ? active / worked : null };
 }
 
 function pad(n) { return String(n).padStart(2, "0"); }
@@ -102,6 +126,50 @@ function openSegment(kind, now) {
 function closeSegment(now) {
   const last = state.segments[state.segments.length - 1];
   if (last && last.end == null) last.end = now;
+}
+
+// Split the open segment at the moment the tab lost focus and insert the
+// gap as its own "unknown" segment, instead of letting segEnd() silently
+// stretch the open segment across time nobody watched.
+// Per docs/exposure_stitching_research.md §4.
+function stitchGap(hiddenAt, now) {
+  if (state.status !== "active" && state.status !== "rest") return;
+  const last = state.segments[state.segments.length - 1];
+  if (!last || last.end != null) return;
+
+  const splitAt = Math.max(last.start, hiddenAt);
+  last.end = splitAt;
+  state.segments.push({ state: "unknown", start: splitAt, end: now });
+  state.priorStatus = state.status;
+  state.status = "unknown";
+  stopTicker();
+}
+
+// Resolve a pending "unknown" segment: fold it into active/rest, or drop it
+// from the record entirely (the one case where elapsed time doesn't hold).
+// "active"/"rest" describe what the gap itself was, so resume as that same
+// state; "discard" throws the gap out and resumes whatever was running
+// before the tab went hidden.
+function resolveGap(choice) {
+  if (state.status !== "unknown") return;
+  const now = Date.now();
+  const last = state.segments[state.segments.length - 1];
+  let resume;
+
+  if (choice === "discard") {
+    if (last && last.state === "unknown") state.segments.pop();
+    resume = state.priorStatus || "active";
+  } else {
+    if (last && last.state === "unknown") last.state = choice;
+    resume = choice;
+  }
+
+  state.priorStatus = null;
+  state.status = resume;
+  openSegment(resume, now);
+  startTicker();
+  save();
+  render();
 }
 
 function startDay() {
@@ -199,7 +267,14 @@ function fmtAxis(ms) {
   return Math.floor(s / 60) + ":" + pad(s % 60);
 }
 
-const laneY = (kind) => (kind === "active" ? CH.active : CH.rest);
+const laneY = (kind) => {
+  if (kind === "active") return CH.active;
+  if (kind === "unknown") return (CH.active + CH.rest) / 2;
+  return CH.rest;
+};
+
+const LANE_LABEL = { active: "Hammering", rest: "Rest", unknown: "Unknown" };
+const LANE_COLOR = { active: "var(--exp-active)", rest: "var(--exp-rest)", unknown: "var(--exp-unknown)" };
 
 function renderWave(now) {
   const svg = $("wave");
@@ -237,7 +312,7 @@ function renderWave(now) {
   ["active", "rest"].forEach((kind) => {
     svg.appendChild(el("text", {
       x: CH.left - 12, y: laneY(kind) + 4, "text-anchor": "end", class: "wave-lane",
-    }, kind === "active" ? "Hammering" : "Rest"));
+    }, LANE_LABEL[kind]));
     svg.appendChild(el("line", {
       x1: CH.left, y1: laneY(kind), x2: CH.right, y2: laneY(kind),
       stroke: "var(--grid)", "stroke-width": 1,
@@ -267,11 +342,12 @@ function renderWave(now) {
         stroke: "var(--slate)", "stroke-width": 2, "stroke-linecap": "round",
       }));
     }
-    svg.appendChild(el("line", {
+    const lineAttrs = {
       x1: x1, y1: y, x2: Math.max(x1 + 0.5, x2), y2: y,
-      stroke: seg.state === "active" ? "var(--exp-active)" : "var(--exp-rest)",
-      "stroke-width": 4, "stroke-linecap": "round",
-    }));
+      stroke: LANE_COLOR[seg.state], "stroke-width": 4, "stroke-linecap": "round",
+    };
+    if (seg.state === "unknown") lineAttrs["stroke-dasharray"] = "6 5";
+    svg.appendChild(el("line", lineAttrs));
     prev = seg.state;
   });
 
@@ -310,7 +386,7 @@ function showTip(evt, seg, now) {
   const tip = $("waveTip");
   const dur = Math.max(0, segEnd(seg, now) - seg.start);
   const from = Math.max(0, seg.start - state.startedAt);
-  tip.innerHTML = "<b>" + (seg.state === "active" ? "Hammering" : "Rest") + "</b>"
+  tip.innerHTML = "<b>" + LANE_LABEL[seg.state] + "</b>"
     + "<span>" + fmtShort(dur) + (seg.end == null ? " · running" : "") + "</span>"
     + "<span>from " + fmtAxis(from) + "</span>";
   tip.classList.remove("hidden");
@@ -400,6 +476,10 @@ const BTN = {
     label: "Resume hammering",
     hint: "Timing rest. Resume when you pick the hammer back up.",
   },
+  unknown: {
+    label: "Resolve the gap below",
+    hint: "The tracker couldn't see this tab for a while — label it below before continuing.",
+  },
   done: {
     label: "Day finished",
     hint: "Day closed. Start a new one from the summary.",
@@ -407,13 +487,14 @@ const BTN = {
 };
 
 const STATE_WORD = {
-  idle: "Not started", active: "Hammering", rest: "Resting", done: "Finished",
+  idle: "Not started", active: "Hammering", rest: "Resting", unknown: "Gap — unresolved", done: "Finished",
 };
 
 function render() {
   const now = Date.now();
   const t = totals(now);
   const running = state.status === "active" || state.status === "rest";
+  const pendingGap = state.status === "unknown";
 
   $("expState").textContent = STATE_WORD[state.status];
   $("expState").dataset.state = state.status;
@@ -422,6 +503,7 @@ function render() {
   const done = state.status === "done";
   $("shiftBtn").textContent = BTN[state.status].label;
   $("shiftBtn").classList.toggle("hidden", done);
+  $("shiftBtn").disabled = pendingGap;
   $("finishBtn").disabled = !running;
   $("finishBtn").classList.toggle("hidden", done);
   $("expHint").textContent = BTN[state.status].hint;
@@ -437,9 +519,20 @@ function render() {
   $("expWeight").disabled = state.status !== "idle";
   $("expBrand").disabled = state.status !== "idle";
 
+  renderGapPrompt(pendingGap, now);
+
   $("waveEmpty").classList.toggle("hidden", state.segments.length > 0);
   renderWave(now);
   renderSummary(now);
+}
+
+function renderGapPrompt(pending, now) {
+  const box = $("expGapPrompt");
+  box.classList.toggle("hidden", !pending);
+  if (!pending) return;
+  const last = state.segments[state.segments.length - 1];
+  const dur = last ? Math.max(0, segEnd(last, now) - last.start) : 0;
+  $("expGapDuration").textContent = fmtShort(dur);
 }
 
 // ---------- wiring ----------
@@ -453,6 +546,30 @@ $("shiftBtn").addEventListener("click", () => {
 });
 
 $("finishBtn").addEventListener("click", finishDay);
+
+$("expGapActive").addEventListener("click", () => resolveGap("active"));
+$("expGapRest").addEventListener("click", () => resolveGap("rest"));
+$("expGapDiscard").addEventListener("click", () => resolveGap("discard"));
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    if (state.status === "active" || state.status === "rest") {
+      state.hiddenAt = Date.now();
+      save();
+    }
+    return;
+  }
+  // Tab is visible again.
+  if (state.hiddenAt != null) {
+    const now = Date.now();
+    if (now - state.hiddenAt >= GAP_THRESHOLD_MS) {
+      stitchGap(state.hiddenAt, now);
+    }
+    state.hiddenAt = null;
+    save();
+    render();
+  }
+});
 
 restore();
 if (state.status === "active" || state.status === "rest") startTicker();

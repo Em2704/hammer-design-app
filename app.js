@@ -165,7 +165,8 @@ async function recommend() {
       data,
     );
   } catch (err) {
-    showError(`Could not compute a recommendation: ${err.message}`);
+    console.error(err);
+    showError("Couldn't compute a recommendation. Check your inputs and try again.");
     return;
   }
 

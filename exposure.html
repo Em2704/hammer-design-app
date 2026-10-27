@@ -67,6 +67,18 @@
         </p>
       </div>
 
+      <div id="expGapPrompt" class="exp-gap-prompt hidden" role="alert">
+        <p class="exp-gap-text">
+          The tracker couldn't see this tab for <b id="expGapDuration">00:00</b> —
+          what was happening?
+        </p>
+        <div class="exp-gap-actions">
+          <button id="expGapActive" class="ghost-btn" type="button">Count as hammering</button>
+          <button id="expGapRest" class="ghost-btn" type="button">Count as rest</button>
+          <button id="expGapDiscard" class="ghost-btn" type="button">Discard this time</button>
+        </div>
+      </div>
+
       <aside class="footnotes" aria-labelledby="fnHead">
         <p id="fnHead" class="fn-head">Notes on the shift setup</p>
         <ol class="fn-list">
@@ -98,6 +110,7 @@
         <ul class="legend">
           <li><i class="swatch swatch-active" aria-hidden="true"></i>Hammering</li>
           <li><i class="swatch swatch-rest" aria-hidden="true"></i>Rest</li>
+          <li><i class="swatch swatch-unknown" aria-hidden="true"></i>Unknown (tab hidden)</li>
         </ul>
       </div>
 
