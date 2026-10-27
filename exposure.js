@@ -276,16 +276,18 @@ const laneY = (kind) => {
 const LANE_LABEL = { active: "Hammering", rest: "Rest", unknown: "Unknown" };
 const LANE_COLOR = { active: "var(--exp-active)", rest: "var(--exp-rest)", unknown: "var(--exp-unknown)" };
 
-function renderWave(now) {
-  const svg = $("wave");
+// Shared drawing core for the big chart, used both for the real recorded
+// shift and for an illustrative alternative pacing pattern (see
+// renderWave() below, which picks the source and passes resolveEnd/hover/
+// liveEdge accordingly). Geometry (CH) and visuals are identical either way
+// so a re-paced view is directly comparable to what actually happened.
+function drawWaveFrom(svg, segments, t0, spanIn, opts) {
   svg.textContent = "";
-  if (!state.segments.length) return;
+  if (!segments.length) return;
 
-  const t0 = state.startedAt;
   // Keep a floor on the window so a two-second-old shift isn't drawn at
   // absurd magnification.
-  const last = state.segments[state.segments.length - 1];
-  const span = Math.max(60e3, segEnd(last, now) - t0);
+  const span = Math.max(60e3, spanIn);
   const x = (t) => CH.left + ((t - t0) / span) * (CH.right - CH.left);
 
   // --- grid + x-axis (recessive) ---
@@ -319,11 +321,11 @@ function renderWave(now) {
     }));
   });
 
-  // --- shaded area under the hammering bouts: the "exposure" read ---
-  state.segments.forEach((seg) => {
+  // --- shaded area under the hammering stretches: the "exposure" read ---
+  segments.forEach((seg) => {
     if (seg.state !== "active") return;
     const x1 = x(seg.start);
-    const x2 = x(segEnd(seg, now));
+    const x2 = x(opts.resolveEnd(seg));
     svg.appendChild(el("rect", {
       x: x1, y: CH.active, width: Math.max(0.5, x2 - x1), height: CH.floor - CH.active,
       fill: "var(--exp-active)", "fill-opacity": 0.12,
@@ -332,10 +334,10 @@ function renderWave(now) {
 
   // --- the square wave itself: horizontal runs + vertical transitions ---
   let prev = null;
-  state.segments.forEach((seg) => {
+  segments.forEach((seg) => {
     const y = laneY(seg.state);
     const x1 = x(seg.start);
-    const x2 = x(segEnd(seg, now));
+    const x2 = x(opts.resolveEnd(seg));
     if (prev !== null) {
       svg.appendChild(el("line", {
         x1: x1, y1: laneY(prev), x2: x1, y2: y,
@@ -351,27 +353,78 @@ function renderWave(now) {
     prev = seg.state;
   });
 
-  // --- live edge marker while the day is still running ---
-  if (state.status === "active" || state.status === "rest") {
+  // --- live edge marker while the day is still running (real shift only) ---
+  if (opts.liveEdge) {
     svg.appendChild(el("circle", {
-      cx: x(now), cy: laneY(state.status), r: 4.5,
+      cx: x(opts.liveEdge.now), cy: laneY(opts.liveEdge.status), r: 4.5,
       fill: "var(--panel)", stroke: "var(--ink)", "stroke-width": 2,
     }));
   }
 
-  // --- hover targets, one per segment, full plot height ---
-  state.segments.forEach((seg) => {
-    const x1 = x(seg.start);
-    const x2 = x(segEnd(seg, now));
-    const hit = el("rect", {
-      x: x1, y: CH.top, width: Math.max(2, x2 - x1), height: CH.axis - CH.top,
-      fill: "transparent",
+  // --- hover targets, one per segment, full plot height (real shift only —
+  // a synthetic alternate schedule has no "now" or seg-to-epoch mapping) ---
+  if (opts.hover) {
+    segments.forEach((seg) => {
+      const x1 = x(seg.start);
+      const x2 = x(opts.resolveEnd(seg));
+      const hit = el("rect", {
+        x: x1, y: CH.top, width: Math.max(2, x2 - x1), height: CH.axis - CH.top,
+        fill: "transparent",
+      });
+      hit.addEventListener("pointerenter", (e) => opts.hover(e, seg));
+      hit.addEventListener("pointerleave", hideTip);
+      svg.appendChild(hit);
     });
-    hit.addEventListener("pointerenter", (e) => showTip(e, seg, now));
-    hit.addEventListener("pointerleave", hideTip);
-    svg.appendChild(hit);
-  });
+  }
+}
 
+// Picks what the big chart currently shows: the real recorded shift, or —
+// if the user has tapped one of the three pacing cards below the summary —
+// that illustrative alternative instead. Toggled by renderPacingIdeas().
+let pacingView = null; // null | "short" | "long" | "even"
+
+function renderWave(now) {
+  const svg = $("wave");
+  const titleEl = $("chartTitle");
+  const hintEl = $("chartViewHint");
+  const wrapEl = $("chartWrap");
+
+  if (pacingView && state.status === "done") {
+    const t = totals(now);
+    const folded = { active: t.active, rest: t.rest + t.unknown, bouts: t.bouts };
+    const segs = buildAlternateSchedule(folded, pacingView);
+    const span = folded.active + folded.rest;
+    const pattern = PACING_PATTERNS.find((p) => p.kind === pacingView);
+
+    drawWaveFrom(svg, segs, 0, span, { resolveEnd: (seg) => seg.end, hover: null, liveEdge: null });
+    svg.setAttribute("aria-label", pattern.title
+      + " — an illustrative, unranked re-pacing of today's own totals, not a record of what happened.");
+    titleEl.textContent = "Illustrating: " + pattern.title;
+    hintEl.textContent = "Not a record of what happened. Click the " + pattern.title
+      + " card again to go back to your recorded shift.";
+    hintEl.classList.remove("hidden");
+    wrapEl.classList.add("showing-alt");
+    return;
+  }
+
+  titleEl.textContent = "Active and off time across the shift";
+  hintEl.classList.add("hidden");
+  wrapEl.classList.remove("showing-alt");
+
+  if (!state.segments.length) {
+    svg.textContent = "";
+    return;
+  }
+  const t0 = state.startedAt;
+  const last = state.segments[state.segments.length - 1];
+  const span = segEnd(last, now) - t0;
+  const running = state.status === "active" || state.status === "rest";
+
+  drawWaveFrom(svg, state.segments, t0, span, {
+    resolveEnd: (seg) => segEnd(seg, now),
+    hover: (e, seg) => showTip(e, seg, now),
+    liveEdge: running ? { now, status: state.status } : null,
+  });
   svg.setAttribute("aria-label", waveAlt(now));
 }
 
@@ -502,6 +555,7 @@ function renderPacingIdeas(now) {
   if (state.status !== "done") {
     box.classList.add("hidden");
     box.innerHTML = "";
+    if (pacingView) { pacingView = null; renderWave(now); }
     return;
   }
   const t = totals(now);
@@ -512,6 +566,7 @@ function renderPacingIdeas(now) {
   if (folded.active <= 0) {
     box.classList.add("hidden");
     box.innerHTML = "";
+    if (pacingView) { pacingView = null; renderWave(now); }
     return;
   }
 
@@ -523,18 +578,44 @@ function renderPacingIdeas(now) {
     const segs = buildAlternateSchedule(folded, kind);
     drawMiniWave($(id), segs, span);
   });
+
+  // Tapping a card shows that pacing in the big chart above, in place of
+  // the recorded shift; tapping the same card again reverts. The explicit
+  // button is the accessible control; the whole-card click is a mouse
+  // convenience layered on top of it (footnote link clicks are excluded so
+  // "*" still jumps to its note instead of toggling).
+  box.querySelectorAll(".pacing-card").forEach((card) => {
+    const kind = card.dataset.kind;
+    const toggle = () => {
+      pacingView = pacingView === kind ? null : kind;
+      render();
+    };
+    card.addEventListener("click", (e) => {
+      if (e.target.closest("a")) return;
+      toggle();
+    });
+    card.querySelector(".pacing-toggle").addEventListener("click", (e) => {
+      e.stopPropagation();
+      toggle();
+    });
+  });
 }
 
 function buildPacingMarkup() {
-  const cards = PACING_PATTERNS.map(({ id, fn, title, blurb }) => ''
-    + '<figure class="pacing-card">'
-    + '<figcaption>' + title
-    + '<a id="ref-' + fn + '" class="fn-ref" href="#' + fn + '" aria-label="Note: ' + title + '">*</a></figcaption>'
-    + '<p class="pacing-blurb">' + blurb + '</p>'
-    + '<svg id="' + id + '" class="wave-mini" viewBox="0 0 312 86" role="img" '
-    + 'aria-label="' + title + ' alternative pacing of the same recorded totals"></svg>'
-    + '</figure>'
-  ).join('');
+  const cards = PACING_PATTERNS.map(({ kind, id, fn, title, blurb }) => {
+    const selected = pacingView === kind;
+    return ''
+      + '<figure class="pacing-card' + (selected ? ' is-selected' : '') + '" data-kind="' + kind + '">'
+      + '<figcaption>' + title
+      + '<a id="ref-' + fn + '" class="fn-ref" href="#' + fn + '" aria-label="Note: ' + title + '">*</a></figcaption>'
+      + '<p class="pacing-blurb">' + blurb + '</p>'
+      + '<svg id="' + id + '" class="wave-mini" viewBox="0 0 312 86" role="img" '
+      + 'aria-label="' + title + ' alternative pacing of the same recorded totals"></svg>'
+      + '<button type="button" class="pacing-toggle" aria-pressed="' + (selected ? "true" : "false") + '">'
+      + (selected ? "Showing above — click to go back" : "Show this pacing above")
+      + '</button>'
+      + '</figure>';
+  }).join('');
 
   return ''
     + '<p class="chart-title">Three ways the same totals could have been paced</p>'

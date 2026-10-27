@@ -106,15 +106,16 @@
       <span class="panel-tag">Exposure trace</span>
 
       <div class="chart-head">
-        <p class="chart-title">Active and off time across the shift</p>
+        <p class="chart-title" id="chartTitle">Active and off time across the shift</p>
         <ul class="legend">
           <li><i class="swatch swatch-active" aria-hidden="true"></i>Hammering</li>
           <li><i class="swatch swatch-rest" aria-hidden="true"></i>Rest</li>
           <li><i class="swatch swatch-unknown" aria-hidden="true"></i>Unknown (tab hidden)</li>
         </ul>
       </div>
+      <p id="chartViewHint" class="chart-view-hint hidden" role="status"></p>
 
-      <div class="chart-wrap">
+      <div class="chart-wrap" id="chartWrap">
         <svg id="wave" class="wave" viewBox="0 0 720 264" role="img"
              aria-label="Square wave of hammering and rest across the shift"></svg>
         <div id="waveTip" class="chart-tip hidden" role="status"></div>

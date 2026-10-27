@@ -1095,6 +1095,11 @@ input[type="range"] { flex: 1; accent-color: var(--ink); }
   background: #fff;
   padding: 10px 12px;
   margin: 0;
+  cursor: pointer;
+}
+.pacing-card.is-selected {
+  border-color: var(--amber);
+  background: var(--amber-soft);
 }
 .pacing-card figcaption {
   font-family: "Saira Condensed", sans-serif;
@@ -1107,4 +1112,39 @@ input[type="range"] { flex: 1; accent-color: var(--ink); }
 .pacing-blurb { font-size: 0.78rem; margin: 0 0 8px; }
 .wave-mini { width: 100%; height: auto; display: block; }
 
+.pacing-toggle {
+  width: 100%;
+  margin-top: 8px;
+  padding: 6px;
+  background: transparent;
+  color: var(--ink);
+  font-family: "Saira Condensed", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  border: 1.5px solid var(--line);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.pacing-card.is-selected .pacing-toggle {
+  border-color: var(--amber);
+  color: var(--amber-ink);
+}
+.pacing-toggle:hover { border-color: var(--ink); }
+.pacing-toggle:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+
 .pacing-footnotes { margin-top: 10px; }
+
+/* ---- big chart showing an alternative pattern instead of the record ---- */
+.chart-view-hint {
+  font-size: 0.8rem;
+  color: var(--amber-ink);
+  margin: -4px 0 10px;
+}
+.chart-wrap.showing-alt {
+  /* inset, not outline -- .chart-wrap gets overflow-x:auto below 780px,
+     which would otherwise clip an outward outline on narrow screens */
+  box-shadow: inset 0 0 0 2px var(--amber);
+  border-radius: 6px;
+}
