@@ -2,7 +2,7 @@
    Precaches the app shell so the app opens offline and qualifies as installable.
    Bump CACHE when any shell file changes. */
 
-const CACHE = "hammer-selector-v9";
+const CACHE = "hammer-selector-v10";
 
 const SHELL = [
   "./index.html",
@@ -11,6 +11,7 @@ const SHELL = [
   "./styles.css",
   "./app.js",
   "./exposure.js",
+  "./exposure-pacing.js",
   "./engine/recommend.js",
   "./engine/profiles.v1.json",
   "./manifest.json",

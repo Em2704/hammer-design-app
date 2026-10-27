@@ -1071,3 +1071,40 @@ input[type="range"] { flex: 1; accent-color: var(--ink); }
   line-height: 1.5;
   margin: 10px 0 6px;
 }
+
+/* ---- alternative pacing patterns (illustrative only, never ranked) ---- */
+.exp-pacing {
+  margin-top: 20px;
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+}
+.pacing-note { font-size: 0.8rem; color: var(--slate); margin: 6px 0 14px; }
+
+.pacing-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+@media (max-width: 780px) {
+  .pacing-grid { grid-template-columns: 1fr; }
+}
+
+.pacing-card {
+  border: 1.5px solid var(--line);
+  border-radius: 5px;
+  background: #fff;
+  padding: 10px 12px;
+  margin: 0;
+}
+.pacing-card figcaption {
+  font-family: "Saira Condensed", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 0.74rem;
+  color: var(--slate);
+  margin-bottom: 4px;
+}
+.pacing-blurb { font-size: 0.78rem; margin: 0 0 8px; }
+.wave-mini { width: 100%; height: auto; display: block; }
+
+.pacing-footnotes { margin-top: 10px; }

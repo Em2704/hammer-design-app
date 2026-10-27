@@ -375,6 +375,33 @@ function renderWave(now) {
   svg.setAttribute("aria-label", waveAlt(now));
 }
 
+// ---------- alternative-pacing mini charts ----------
+// Much smaller than CH (the main trace): no axis ticks, no hover tips, no
+// live-edge marker -- these are schematic illustrations of a synthetic
+// schedule, not a live recording, so the extra chrome renderWave() needs
+// would be clutter. Reuses el() and LANE_COLOR so colour stays identical to
+// the main chart. Per docs/exposure_pacing_research.md (private repo).
+const CH_MINI = { left: 8, right: 304, active: 20, rest: 56, axis: 72 };
+
+function drawMiniWave(svg, segments, span) {
+  svg.textContent = "";
+  if (!segments.length || span <= 0) return;
+  const x = (t) => CH_MINI.left + (t / span) * (CH_MINI.right - CH_MINI.left);
+  const laneYMini = (kind) => (kind === "active" ? CH_MINI.active : CH_MINI.rest);
+  svg.appendChild(el("line", {
+    x1: CH_MINI.left, y1: CH_MINI.axis, x2: CH_MINI.right, y2: CH_MINI.axis,
+    stroke: "var(--line)", "stroke-width": 1,
+  }));
+  segments.forEach((seg) => {
+    const x1 = x(seg.start);
+    const x2 = x(seg.end);
+    svg.appendChild(el("line", {
+      x1, y1: laneYMini(seg.state), x2: Math.max(x1 + 0.5, x2), y2: laneYMini(seg.state),
+      stroke: LANE_COLOR[seg.state], "stroke-width": 6, "stroke-linecap": "round",
+    }));
+  });
+}
+
 function waveAlt(now) {
   const t = totals(now);
   return "Square wave of the shift: " + t.bouts + " hammering bout"
@@ -456,6 +483,83 @@ function renderSummary(now) {
   $("resetBtn").addEventListener("click", resetDay);
 }
 
+// Three ways today's own active/rest totals could have been paced instead.
+// Illustrative only -- not ranked, not a recommendation. See
+// docs/exposure_pacing_research.md §4 (private repo) for why: the pacing
+// literature disagrees on which pattern reduces fatigue more, and none of
+// it is about hammering.
+const PACING_PATTERNS = [
+  { kind: "short", id: "expPaceShort", fn: "fn-pace-short",
+    title: "Short & frequent", blurb: "Many short hammering bouts, many short rests." },
+  { kind: "long", id: "expPaceLong", fn: "fn-pace-long",
+    title: "Long & infrequent", blurb: "A few long hammering bouts, a few long rests." },
+  { kind: "even", id: "expPaceEven", fn: "fn-pace-even",
+    title: "Evenly spaced", blurb: "Bouts and rests of roughly equal length, spread evenly." },
+];
+
+function renderPacingIdeas(now) {
+  const box = $("expPacingIdeas");
+  if (state.status !== "done") {
+    box.classList.add("hidden");
+    box.innerHTML = "";
+    return;
+  }
+  const t = totals(now);
+  // Fold any residual "unknown" time into rest so active + rest == span
+  // exactly. Not reachable in normal use -- finishDay() only runs from
+  // "active"/"rest" status -- but keeps the identity exact if it ever is.
+  const folded = { active: t.active, rest: t.rest + t.unknown, bouts: t.bouts };
+  if (folded.active <= 0) {
+    box.classList.add("hidden");
+    box.innerHTML = "";
+    return;
+  }
+
+  box.innerHTML = buildPacingMarkup();
+  box.classList.remove("hidden");
+
+  const span = folded.active + folded.rest;
+  PACING_PATTERNS.forEach(({ kind, id }) => {
+    const segs = buildAlternateSchedule(folded, kind);
+    drawMiniWave($(id), segs, span);
+  });
+}
+
+function buildPacingMarkup() {
+  const cards = PACING_PATTERNS.map(({ id, fn, title, blurb }) => ''
+    + '<figure class="pacing-card">'
+    + '<figcaption>' + title
+    + '<a id="ref-' + fn + '" class="fn-ref" href="#' + fn + '" aria-label="Note: ' + title + '">*</a></figcaption>'
+    + '<p class="pacing-blurb">' + blurb + '</p>'
+    + '<svg id="' + id + '" class="wave-mini" viewBox="0 0 312 86" role="img" '
+    + 'aria-label="' + title + ' alternative pacing of the same recorded totals"></svg>'
+    + '</figure>'
+  ).join('');
+
+  return ''
+    + '<p class="chart-title">Three ways the same totals could have been paced</p>'
+    + '<p class="pacing-note">Not a record of what happened, and none of these is shown '
+    + 'as better than another. Each re-splits today’s own hammering and rest totals '
+    + 'into a different bout/rest cadence. Pacing research is mixed and task-dependent, '
+    + 'and no study was found on hammering specifically — see the notes below.</p>'
+    + '<div class="pacing-grid">' + cards + '</div>'
+    + '<aside class="footnotes pacing-footnotes" aria-labelledby="fnPaceHead">'
+    + '<p id="fnPaceHead" class="fn-head">Notes on these patterns</p>'
+    + '<ol class="fn-list">'
+    + '<li id="fn-pace-short"><a class="fn-ref" href="#ref-fn-pace-short" aria-label="Back">*</a> '
+    + 'Short, frequent micro-breaks reduced measured muscle fatigue in a material-handling '
+    + 'task (Beltran Martinez et al., 2023) — a different task than hammering.</li>'
+    + '<li id="fn-pace-long"><a class="fn-ref" href="#ref-fn-pace-long" aria-label="Back">*</a> '
+    + 'Long, self-selected breaks produced less fatigue than short-frequent ones in a '
+    + 'precision-work task (Ergonomics, 2021) — the opposite finding from the short pattern’s '
+    + 'citation, on a different task.</li>'
+    + '<li id="fn-pace-even"><a class="fn-ref" href="#ref-fn-pace-even" aria-label="Back">*</a> '
+    + 'No single study backs one fixed work-rest ratio; shown as a neutral baseline, not a '
+    + 'third vote. See docs/exposure_pacing_research.md for the full picture.</li>'
+    + '</ol>'
+    + '</aside>';
+}
+
 const ESCAPES = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
 
 function escapeHtml(s) {
@@ -524,6 +628,7 @@ function render() {
   $("waveEmpty").classList.toggle("hidden", state.segments.length > 0);
   renderWave(now);
   renderSummary(now);
+  renderPacingIdeas(now);
 }
 
 function renderGapPrompt(pending, now) {
